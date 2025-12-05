@@ -77,10 +77,14 @@ const Landing = () => {
       >
         <div className="wazi-landing min-h-screen bg-gradient-to-br from-[#1e1b4b] via-[#2d2a6e] to-[#1e1b4b]">
           {/* Navigation */}
-          <nav className={`wazi-nav flex items-center justify-between px-4 md:px-8 py-4 ${scrolled ? 'scrolled' : ''}`}>
+          <nav 
+            className={`wazi-nav flex items-center justify-between px-4 md:px-8 py-4 fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+              scrolled ? 'bg-[#1e1b4b]/90 backdrop-blur-sm py-3' : 'bg-transparent py-4'
+            }`}
+          >
             <div className="nav-brand flex items-center gap-2">
-              <Shield className="wazi-logo w-8 h-8" />
-              <span className="wazi-brand-text text-xl font-bold">Wazi</span>
+              <Shield className="wazi-logo w-8 h-8 text-white" />
+              <span className="wazi-brand-text text-xl font-bold text-white">Wazi</span>
             </div>
             
             {/* Desktop Navigation Links */}
@@ -116,54 +120,145 @@ const Landing = () => {
 
             {/* Mobile Menu Button */}
             <button 
-              className="mobile-menu-toggle md:hidden flex items-center justify-center w-10 h-10 text-white"
+              className="mobile-menu-toggle md:hidden flex items-center justify-center w-10 h-10 text-white z-50 relative"
               onClick={toggleMobileMenu}
               aria-label="Toggle menu"
+              style={{
+                position: 'relative',
+                zIndex: 1001
+              }}
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </nav>
 
           {/* Mobile Menu Overlay */}
-          <div className={`mobile-menu-overlay fixed inset-0 bg-[#1e1b4b] z-50 transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-            <div className="mobile-menu-content flex flex-col h-full p-6">
-              <div className="mobile-menu-header flex justify-between items-center mb-8">
-                <div className="nav-brand flex items-center gap-2">
-                  <Shield className="wazi-logo w-8 h-8" />
-                  <span className="wazi-brand-text text-xl font-bold text-white">Wazi</span>
-                </div>
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(30, 27, 75, 0.98)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              zIndex: 999,
+              opacity: mobileMenuOpen ? 1 : 0,
+              visibility: mobileMenuOpen ? 'visible' : 'hidden',
+              transition: 'opacity 300ms ease-in-out, visibility 300ms ease-in-out',
+              overflowY: 'auto'
+            }}
+            className="mobile-menu-overlay"
+          >
+            <div 
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                padding: '1.5rem',
+                paddingTop: '5rem'
+              }}
+            >
+              <div style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                zIndex: 1002
+              }}>
+                <button 
+                  onClick={toggleMobileMenu}
+                  aria-label="Close menu"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'white',
+                    padding: '0.5rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X size={28} />
+                </button>
               </div>
               
-              <div className="mobile-menu-links flex flex-col gap-4 flex-1">
+              <div 
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  flex: 1
+                }}
+              >
                 <a 
                   href="#features" 
-                  className="mobile-nav-link text-white text-lg py-3 border-b border-purple-800 hover:text-purple-300 transition-colors"
+                  style={{
+                    color: 'white',
+                    fontSize: '1.25rem',
+                    padding: '1rem 0',
+                    borderBottom: '1px solid rgba(168, 85, 247, 0.3)',
+                    textDecoration: 'none',
+                    transition: 'color 200ms ease-in-out'
+                  }}
+                  className="hover:text-purple-300"
                   onClick={(e) => handleNavLinkClick(e, 'features')}
                 >
                   Features
                 </a>
                 <a 
                   href="#roles" 
-                  className="mobile-nav-link text-white text-lg py-3 border-b border-purple-800 hover:text-purple-300 transition-colors"
+                  style={{
+                    color: 'white',
+                    fontSize: '1.25rem',
+                    padding: '1rem 0',
+                    borderBottom: '1px solid rgba(168, 85, 247, 0.3)',
+                    textDecoration: 'none',
+                    transition: 'color 200ms ease-in-out'
+                  }}
+                  className="hover:text-purple-300"
                   onClick={(e) => handleNavLinkClick(e, 'roles')}
                 >
                   Roles
                 </a>
                 <a 
                   href="#about" 
-                  className="mobile-nav-link text-white text-lg py-3 border-b border-purple-800 hover:text-purple-300 transition-colors"
+                  style={{
+                    color: 'white',
+                    fontSize: '1.25rem',
+                    padding: '1rem 0',
+                    borderBottom: '1px solid rgba(168, 85, 247, 0.3)',
+                    textDecoration: 'none',
+                    transition: 'color 200ms ease-in-out'
+                  }}
+                  className="hover:text-purple-300"
                   onClick={(e) => handleNavLinkClick(e, 'footer')}
                 >
                   About
                 </a>
                 
-                <div className="mobile-menu-actions mt-auto pt-8">
+                <div style={{
+                  marginTop: 'auto',
+                  paddingTop: '2rem'
+                }}>
                   <Link 
                     to="/role?" 
-                    className="wazi-btn wazi-btn-primary flex items-center justify-center gap-2 w-full bg-white text-purple-700 py-3 rounded-lg font-medium hover:bg-purple-50 transition-colors"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.75rem',
+                      width: '100%',
+                      backgroundColor: 'white',
+                      color: '#6d28d9',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      fontWeight: '500',
+                      textDecoration: 'none',
+                      transition: 'background-color 200ms ease-in-out'
+                    }}
+                    className="hover:bg-purple-50"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <UserCheck size={20} />
+                    <UserCheck size={24} />
                     <span>Sign In</span>
                   </Link>
                 </div>
@@ -172,7 +267,7 @@ const Landing = () => {
           </div>
 
           {/* Hero Section */}
-          <section className="wazi-hero flex items-center justify-center min-h-screen px-4 py-16">
+          <section className="wazi-hero flex items-center justify-center min-h-screen px-4 py-16 pt-20">
             <div className="wazi-hero-content flex flex-col items-center text-center max-w-4xl">
               <div className="wazi-hero-badge flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-8">
                 <Zap className="w-4 h-4" />
@@ -344,7 +439,6 @@ const Landing = () => {
               <div className="wazi-roles-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* School Admin */}
                 <div className="wazi-role-card flex flex-col p-6 bg-white/5 rounded-xl backdrop-blur-sm border border-purple-500/20">
-               
                   <div className="wazi-role-icon flex justify-center mb-4">
                     <Users size={48} className="text-purple-300" />
                   </div>
