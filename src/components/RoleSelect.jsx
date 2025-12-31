@@ -27,7 +27,7 @@ const RoleSelection = () => {
     minHeight: '100vh',
     background: 'linear-gradient(135deg, #1e1b4b 0%, #2d2a6e 50%, #1e1b4b 100%)',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
-    paddingTop: '4rem'
+    paddingTop: '0rem'
   };
 
   const contentStyle = {
@@ -35,7 +35,7 @@ const RoleSelection = () => {
     width: '100%',
     color: 'white',
     margin: '0 auto',
-    padding: '1.5rem 1rem'
+    padding: '1rem 1rem'
   };
 
   const fixedBackButtonStyle = {
@@ -67,7 +67,7 @@ const RoleSelection = () => {
 
   const headerStyle = {
     textAlign: 'center',
-    marginBottom: '3rem'
+    marginBottom: '2rem'
   };
 
   const logoStyle = {
@@ -75,7 +75,7 @@ const RoleSelection = () => {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.5rem',
-    marginBottom: '1.5rem'
+    marginBottom: '0.5rem'
   };
 
   const logoIconStyle = {
@@ -224,7 +224,7 @@ const RoleSelection = () => {
       color: '#8b5cf6',
       buttonColor: '#8b5cf6',
       buttonHoverColor: '#7c3aed',
-      route: '/login?role=admin'
+      route: '/login/admin'
     },
     {
       id: 'teacher',
@@ -240,7 +240,7 @@ const RoleSelection = () => {
       color: '#60a5fa',
       buttonColor: '#60a5fa',
       buttonHoverColor: '#3b82f6',
-      route: '/login?role=teacher'
+      route: '/teacher/login'
     },
     {
       id: 'student',
@@ -256,7 +256,7 @@ const RoleSelection = () => {
       color: '#10b981',
       buttonColor: '#10b981',
       buttonHoverColor: '#059669',
-      route: '/login?role=student'
+      route: '/students/login'
     }
   ];
 

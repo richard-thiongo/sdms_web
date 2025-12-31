@@ -1,0 +1,218 @@
+/* =========================================
+   WAZI LANDING PAGE – ROYAL PURPLE THEME
+   Matches RoleSelection + Global Variables
+========================================= */
+
+/* ---------- ROOT VARIABLES (fallback safety) ---------- */
+:root {
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --primary-light: #a78bfa;
+
+  --background: #1e1b4b;
+  --surface: #312e81;
+  --surface-hover: #4338ca;
+
+  --text-primary: #faf5ff;
+  --text-secondary: #ddd6fe;
+  --text-muted: #c4b5fd;
+
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(139, 92, 246, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- LANDING WRAPPER ---------- */
+.wazi-landing {
+  min-height: 100vh;
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ---------- NAVIGATION ---------- */
+.wazi-nav {
+  border-bottom: 1px solid transparent;
+}
+
+.wazi-nav.scrolled {
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.nav-link {
+  font-weight: 500;
+  position: relative;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.wazi-nav-cta {
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.25);
+}
+
+/* ---------- MOBILE MENU ---------- */
+.mobile-menu-overlay {
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* ---------- HERO SECTION ---------- */
+.wazi-hero {
+  position: relative;
+}
+
+.wazi-hero-content {
+  animation: fadeUp 0.9s ease forwards;
+}
+
+.wazi-hero-badge {
+  border: 1px solid var(--glass-border);
+}
+
+.wazi-hero-title {
+  line-height: 1.15;
+}
+
+.wazi-accent {
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary-light),
+    #f59e0b
+  );
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---------- BUTTONS ---------- */
+.wazi-btn {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.wazi-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.wazi-btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+}
+
+.wazi-btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-hover), var(--primary));
+}
+
+.wazi-btn-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* ---------- STATS ---------- */
+.wazi-stat-card {
+  border: 1px solid var(--glass-border);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.wazi-stat-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.wazi-stat-icon {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+}
+
+/* ---------- SECTIONS ---------- */
+.wazi-section {
+  position: relative;
+}
+
+.wazi-section-header {
+  animation: fadeUp 0.8s ease forwards;
+}
+
+/* ---------- FEATURES ---------- */
+.wazi-feature-card {
+  border: 1px solid var(--glass-border);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.wazi-feature-card:hover {
+  transform: translateY(-6px);
+}
+
+.wazi-feature-icon {
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+}
+
+/* ---------- ROLES ---------- */
+.wazi-role-card {
+  background: var(--glass-bg);
+  border-radius: 14px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.wazi-role-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.35);
+}
+
+.wazi-role-features li {
+  padding-left: 0.25rem;
+}
+
+/* ---------- CTA ---------- */
+.wazi-cta {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15),
+    rgba(30, 27, 75, 0.9)
+  );
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.wazi-cta-icon {
+  filter: drop-shadow(0 6px 20px rgba(139, 92, 246, 0.6));
+}
+
+/* ---------- FOOTER ---------- */
+.wazi-footer {
+  border-top: 1px solid var(--glass-border);
+}
+
+.wazi-footer-links a {
+  font-size: 0.95rem;
+}
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- REDUCED MOTION ---------- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
