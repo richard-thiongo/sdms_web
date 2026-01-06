@@ -592,7 +592,7 @@ body {
 
 .wazi-section-subtitle {
   font-size: 1.25rem;
-  color: var(--text-secondary);
+  color: var(--text-secondary);   
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
