@@ -39,7 +39,7 @@ const RoleSelection = () => {
       id: 'student',
       title: 'Student',
       icon: BookOpen,
-      desc: 'Transparent access to personal records, behavior tracking, and appeals.',
+      desc: 'Transparent access to personal records, behavior tracking, and accountability.',
       color: '#10b981', // Emerald
       route: '/students/login',
       gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0))'
