@@ -9,11 +9,8 @@ import {
   Lock,
   Mail,
   AlertCircle,
-  CheckCircle,
-  UserPlus
+  CheckCircle
 } from 'lucide-react';
-
-
 
 const api = process.env.REACT_APP_API_URL;
 
@@ -27,6 +24,7 @@ const SchoolAdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -97,368 +95,308 @@ const SchoolAdminLogin = () => {
     }
   };
 
+  // Theme Colors (Violet/Indigo for School Admin)
+  const colors = {
+    primary: '#8b5cf6', // Violet 500
+    primaryHover: '#7c3aed', // Violet 600
+    primaryLight: 'rgba(139, 92, 246, 0.1)',
+    background: 'linear-gradient(135deg, #0a0f1c 0%, #1a1744 50%, #0a0f1c 100%)',
+    cardBg: 'rgba(30, 41, 59, 0.4)',
+    border: 'rgba(148, 163, 184, 0.08)',
+    textPrimary: '#f8fafc',
+    textSecondary: '#cbd5e1',
+    textMuted: '#94a3b8',
+    inputBg: 'rgba(15, 23, 42, 0.6)',
+    inputBorder: 'rgba(148, 163, 184, 0.1)',
+    shadow: '0 20px 40px -10px rgba(0, 0, 0, 0.3)',
+    glow: '0 0 20px rgba(139, 92, 246, 0.3)'
+  };
+
   const containerStyle = {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #1e1b4b 0%, #2d2a6e 50%, #1e1b4b 100%)',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+    background: colors.background,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '1rem'
-  };
-
-  const loginCardStyle = {
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '16px',
-    padding: '2.5rem',
-    width: '100%',
-    maxWidth: '420px',
-    backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(139, 92, 246, 0.2)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+    padding: '1rem',
     position: 'relative',
     overflow: 'hidden'
   };
 
-  // Back button inside the form card
-  const formBackButtonStyle = {
-    position: 'absolute',
-    top: '1.25rem',
-    left: '1.25rem',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    color: '#c4b5fd',
-    textDecoration: 'none',
-    padding: '0.5rem',
-    borderRadius: '8px',
-    transition: 'all 0.3s ease',
-    background: 'rgba(255, 255, 255, 0.05)',
-    fontSize: '0.85rem',
-    fontWeight: '500',
-    zIndex: 10,
-    border: '1px solid rgba(139, 92, 246, 0.1)',
-    ':hover': {
-      background: 'rgba(255, 255, 255, 0.1)',
-      color: '#faf5ff',
-      transform: 'translateX(-2px)'
-    }
+  const cardStyle = {
+    background: colors.cardBg,
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderRadius: '24px',
+    border: `1px solid ${colors.border}`,
+    padding: '2.5rem',
+    width: '100%',
+    maxWidth: '420px',
+    boxShadow: colors.shadow,
+    position: 'relative',
+    zIndex: 1
   };
 
-  const loginCardHeaderStyle = {
+  const headerStyle = {
     textAlign: 'center',
-    marginBottom: '2rem',
-    marginTop: '0.5rem'
+    marginBottom: '2.5rem'
   };
 
-  const logoStyle = {
+  const logoContainerStyle = {
+    width: '4rem',
+    height: '4rem',
+    background: colors.primaryLight,
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '0.75rem',
-    marginBottom: '1rem'
-  };
-
-  const logoIconStyle = {
-    width: '2.5rem',
-    height: '2.5rem',
-    color: '#8b5cf6'
-  };
-
-  const brandTextStyle = {
-    fontSize: '2.25rem',
-    fontWeight: '800',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #f59e0b 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
+    margin: '0 auto 1.5rem',
+    border: `1px solid rgba(139, 92, 246, 0.2)`
   };
 
   const titleStyle = {
-    fontSize: '1.75rem',
+    fontSize: '2rem',
     fontWeight: '700',
-    marginBottom: '0.5rem',
-    color: '#faf5ff',
-    textAlign: 'center'
+    color: colors.textPrimary,
+    marginBottom: '0.5rem'
   };
 
   const subtitleStyle = {
+    color: colors.textSecondary,
     fontSize: '1rem',
-    color: '#c4b5fd',
-    textAlign: 'center',
-    marginBottom: '2rem'
-  };
-
-  const formStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem'
+    lineHeight: '1.5'
   };
 
   const inputGroupStyle = {
-    position: 'relative'
+    position: 'relative',
+    marginBottom: '1.25rem'
   };
 
   const inputStyle = {
     width: '100%',
-    padding: '0.875rem 1rem 0.875rem 2.75rem',
-    background: 'rgba(255, 255, 255, 0.07)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '10px',
-    color: '#faf5ff',
-    fontSize: '0.95rem',
-    transition: 'all 0.3s ease',
+    padding: '1rem 1rem 1rem 3rem',
+    background: colors.inputBg,
+    border: `1px solid ${colors.inputBorder}`,
+    borderRadius: '12px',
+    color: colors.textPrimary,
+    fontSize: '1rem',
     outline: 'none',
-    ':focus': {
-      borderColor: '#8b5cf6',
-      boxShadow: '0 0 0 2px rgba(139, 92, 246, 0.2)'
-    }
+    transition: 'all 0.3s ease',
+    boxSizing: 'border-box'
   };
 
   const inputIconStyle = {
     position: 'absolute',
-    left: '0.875rem',
+    left: '1rem',
     top: '50%',
     transform: 'translateY(-50%)',
-    color: '#c4b5fd',
-    width: '1.25rem',
-    height: '1.25rem'
-  };
-
-  const passwordToggleStyle = {
-    position: 'absolute',
-    right: '0.875rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    color: '#c4b5fd',
-    cursor: 'pointer',
-    padding: '0.25rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'color 0.2s ease',
-    ':hover': {
-      color: '#faf5ff'
-    }
+    color: colors.textMuted,
+    pointerEvents: 'none'
   };
 
   const buttonStyle = {
     width: '100%',
-    padding: '0.875rem 1.25rem',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+    padding: '1rem',
+    background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryHover})`,
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: '12px',
     color: 'white',
-    fontSize: '0.95rem',
+    fontSize: '1rem',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
+    marginTop: '1rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.5rem',
-    marginTop: '0.5rem',
-    ':hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 10px 20px rgba(139, 92, 246, 0.3)'
-    },
-    ':disabled': {
-      opacity: 0.6,
-      cursor: 'not-allowed',
-      transform: 'none'
-    }
+    boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.2)'
   };
 
-  const errorStyle = {
-    background: 'rgba(239, 68, 68, 0.1)',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-    color: '#fecaca',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.5rem',
-    marginBottom: '1rem'
-  };
-
-  const successStyle = {
-    background: 'rgba(34, 197, 94, 0.1)',
-    border: '1px solid rgba(34, 197, 94, 0.3)',
-    color: '#bbf7d0',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.5rem',
-    marginBottom: '1rem'
-  };
-
-  const footerStyle = {
-    marginTop: '1.5rem',
-    textAlign: 'center',
-    color: '#c4b5fd',
-    fontSize: '0.85rem'
-  };
-  const signupSectionStyle = {
-    marginTop: '1.5rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid rgba(139, 92, 246, 0.1)',
-    textAlign: 'center',
-    fontSize: '0.9rem',
-    color: '#c4b5fd'
-  };
-
-  const signupLinkStyle = {
-    color: '#8b5cf6',
+  const backButtonStyle = {
+    position: 'absolute',
+    top: '1.5rem',
+    left: '1.5rem',
+    color: colors.textMuted,
     textDecoration: 'none',
-    fontWeight: '600',
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
-    gap: '0.4rem',
-    marginTop: '0.5rem',
-    padding: '0.5rem 1rem',
-    borderRadius: '8px',
-    transition: 'all 0.3s ease',
-    background: 'rgba(139, 92, 246, 0.1)',
-    ':hover': {
-      background: 'rgba(139, 92, 246, 0.2)',
-      color: '#faf5ff',
-      transform: 'translateY(-2px)'
-    }
+    gap: '0.5rem',
+    fontSize: '0.9rem',
+    transition: 'color 0.3s ease',
+    zIndex: 10
   };
 
   return (
     <div style={containerStyle}>
-      <div style={loginCardStyle}>
-        {/* Back button inside the form card */}
-        <Link 
-          to="/role"
-          style={formBackButtonStyle}
-          title="Go back to role selection"
-        >
-          <ArrowLeft size={16} />
-        </Link>
+      <Link 
+        to="/role" 
+        style={backButtonStyle}
+        onMouseEnter={(e) => e.target.style.color = colors.textPrimary}
+        onMouseLeave={(e) => e.target.style.color = colors.textMuted}
+      >
+        <ArrowLeft size={18} />
+        Back
+      </Link>
 
-        <div style={loginCardHeaderStyle}>
-          <div style={logoStyle}>
-            <Shield style={logoIconStyle} />
-            <span style={brandTextStyle}>Wazi</span>
+      <div style={cardStyle}>
+        {/* Top Border Gradient */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: `linear-gradient(90deg, ${colors.primary}, #a78bfa)`,
+          borderRadius: '24px 24px 0 0',
+          opacity: 0.8
+        }} />
+
+        <div style={headerStyle}>
+          <div style={logoContainerStyle}>
+            <Shield size={32} color={colors.primary} />
           </div>
-          <h1 style={titleStyle}>School Admin Login</h1>
-          <p style={subtitleStyle}>
-            Access your school management dashboard
-          </p>
+          <h1 style={titleStyle}>Admin Portal</h1>
+          <p style={subtitleStyle}>Sign in to access school management tools</p>
         </div>
 
         {error && (
-          <div style={errorStyle}>
-            <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <span>{error}</span>
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            borderRadius: '12px',
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            color: '#fecaca'
+          }}>
+            <AlertCircle size={20} />
+            <span style={{ fontSize: '0.9rem' }}>{error}</span>
           </div>
         )}
 
         {success && (
-          <div style={successStyle}>
-            <CheckCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <span>{success}</span>
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            borderRadius: '12px',
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            color: '#a7f3d0'
+          }}>
+            <CheckCircle size={20} />
+            <span style={{ fontSize: '0.9rem' }}>{success}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={formStyle}>
+        <form onSubmit={handleSubmit}>
           <div style={inputGroupStyle}>
-            <Mail style={inputIconStyle} />
+            <Mail size={20} style={inputIconStyle} />
             <input
               type="email"
               name="email"
-              placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
+              placeholder="Email address"
               style={inputStyle}
-              disabled={loading}
               required
+              onFocus={(e) => e.target.style.borderColor = colors.primary}
+              onBlur={(e) => e.target.style.borderColor = colors.inputBorder}
             />
           </div>
 
           <div style={inputGroupStyle}>
-            <Lock style={inputIconStyle} />
+            <Lock size={20} style={inputIconStyle} />
             <input
               type={showPassword ? "text" : "password"}
               name="password"
-              placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
+              placeholder="Password"
               style={inputStyle}
-              disabled={loading}
               required
+              onFocus={(e) => e.target.style.borderColor = colors.primary}
+              onBlur={(e) => e.target.style.borderColor = colors.inputBorder}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              style={passwordToggleStyle}
-              disabled={loading}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              style={{
+                position: 'absolute',
+                right: '1rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: colors.textMuted,
+                cursor: 'pointer'
+              }}
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
-          <button
-            type="submit"
-            style={buttonStyle}
-            disabled={loading}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '1rem' }}>
+            <input 
+              type="checkbox" 
+              id="terms" 
+              checked={acceptedTerms} 
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              style={{ marginTop: '0.25rem', accentColor: colors.primary, cursor: 'pointer', width: '16px', height: '16px' }}
+            />
+            <label htmlFor="terms" style={{ color: colors.textSecondary, fontSize: '0.9rem', lineHeight: '1.5', cursor: 'pointer' }}>
+              I agree to the <Link to="/terms-and-conditions" style={{ color: colors.primary, textDecoration: 'none' }}>Terms & Conditions</Link> and <Link to="/privacy-policy" style={{ color: colors.primary, textDecoration: 'none' }}>Privacy Policy</Link>
+            </label>
+          </div>
+
+          <button 
+            type="submit" 
+            style={{
+              ...buttonStyle,
+              opacity: (!loading && acceptedTerms) ? 1 : 0.6,
+              cursor: (!loading && acceptedTerms) ? 'pointer' : 'not-allowed'
+            }}
+            disabled={loading || !acceptedTerms}
+            onMouseEnter={(e) => {
+              if (!loading && acceptedTerms) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 10px 20px -5px rgba(139, 92, 246, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(139, 92, 246, 0.2)';
+            }}
           >
-            {loading ? (
-              <>
-                <div style={{
-                  width: '1rem',
-                  height: '1rem',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderTopColor: 'white',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }} />
-                <style>{`
-                  @keyframes spin {
-                    to { transform: rotate(360deg); }
-                  }
-                `}</style>
-                <span>Logging in...</span>
-              </>
-            ) : (
-              <>
-                <Users size={18} />
-                <span>Login</span>
-              </>
-            )}
+            {loading ? 'Signing in...' : 'Sign In'}
+            {!loading && <Users size={18} />}
           </button>
         </form>
 
-        {/* Sign Up Section */}
-        <div style={signupSectionStyle}>
-          <p style={{ marginBottom: '0.5rem' }}>
-            Don't have an account? 
-          </p>
-          <Link 
-           
-            style={signupLinkStyle}
-            onClick={(e) => {
-              e.preventDefault();
-              alert('Please contact your system administrator to create a school admin account.');
-            
-            }}
-          >
-            <UserPlus size={16} />
-            <span>Sign Up</span>
-          </Link>
-        </div>
-
-        <div style={footerStyle}>
-          <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-            © 2025 Wazi Education Management System
+        <div style={{
+          marginTop: '2rem',
+          textAlign: 'center',
+          borderTop: `1px solid ${colors.border}`,
+          paddingTop: '1.5rem'
+        }}>
+          <p style={{ color: colors.textMuted, fontSize: '0.9rem' }}>
+            Need an account?{' '}
+            <Link 
+              to="#"
+              onClick={(e) => {
+                e.preventDefault();
+                alert('Please contact your administrator to create a school admin account.');
+              }}
+              style={{ color: colors.primary, textDecoration: 'none', fontWeight: '500' }}
+            >
+              Contact Support
+            </Link>
           </p>
         </div>
       </div>

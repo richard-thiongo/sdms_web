@@ -8,13 +8,22 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  Users,
+  BookOpen,
+  GraduationCap,
+  AlertTriangle,
+  ShieldAlert,
+  Lock,
 } from 'lucide-react';
+import ChangePasswordModal from './ChangePasswordModal';
 
-// Shared theme colors matching your provided styles
+
+// Enhanced theme colors for better UI/UX (Student Module Match)
 const themeColors = {
   primary: '#8b5cf6',
   primaryDark: '#7c3aed',
   primaryLight: '#a78bfa',
+  primaryLighter: '#c4b5fd',
   gray50: '#f8fafc',
   gray100: '#f1f5f9',
   gray200: '#e2e8f0',
@@ -22,13 +31,13 @@ const themeColors = {
   gray400: '#94a3b8',
   gray500: '#64748b',
   gray600: '#475569',
-  gray700: '#334155',
+  gray700: 'rgba(30, 41, 59, 0.4)', // Glassmorphic surface
   gray800: '#1e293b',
-  gray900: '#0f172a',
+  gray900: '#0a0f1c', // Deep blue/black
   gray950: '#020617',
-  success: '#10b981',
-  info: '#3b82f6',
-  warning: '#f59e0b',
+  error: '#ef4444',
+  errorLight: '#fee2e2',
+  gradientSidebar: 'rgba(15, 23, 42, 0.6)', // Glassmorphic
 };
 
 const Sidebar = ({ onCollapse }) => {
@@ -38,26 +47,34 @@ const Sidebar = ({ onCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
-  // Check screen size
+  // Enhanced resize handler with better performance
   useEffect(() => {
+    let resizeTimer;
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setIsMobileOpen(false);
-      }
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const mobile = window.innerWidth < 768;
+        setIsMobile(mobile);
+        if (!mobile) {
+          setIsMobileOpen(false);
+        }
+      }, 150);
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimer);
+    };
   }, []);
 
-  // Close mobile menu when clicking outside
+  // Enhanced click outside handler
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isMobile && isMobileOpen && !event.target.closest('.sidebar') && !event.target.closest('.mobile-toggle')) {
-        setIsMobileOpen(false);
+        closeSidebar();
       }
     };
 
@@ -65,7 +82,7 @@ const Sidebar = ({ onCollapse }) => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isMobile, isMobileOpen]);
 
-  // Navigation items - Only Dashboard
+  // Navigation items with appropriate icons
   const navItems = [
     {
       id: 'dashboard',
@@ -74,17 +91,47 @@ const Sidebar = ({ onCollapse }) => {
       path: '/admin/dashboard',
       description: 'Overview and analytics'
     },
-
     {
       id: 'Teachers',
       label: 'Teachers',
-      icon: Home,
+      icon: Users,
       path:'/admin/teachers',
       description:'Manage Teachers'
-    }
+    },
+
+    {
+      id: 'Classes',
+      label: 'Classes',
+      icon: BookOpen,
+      path: '/admin/classes',
+      description: 'Manage Classes'
+    },
+
+    {
+      id: 'Students',
+      label: 'Students',
+      icon: GraduationCap,
+      path: '/admin/students',
+      description: 'Manage Students'
+    },
+
+    {
+      id: 'A/B Incidents',
+      label: 'A/B Incidents',
+      icon: AlertTriangle,
+      path: '/admin/ab-incidents',
+      description: 'Manage A/B Incidents'
+    },
+
+    {
+      id: 'S Incidents',
+      label: 'S Incidents',
+      icon: ShieldAlert,
+      path: '/admin/s-incidents',
+      description: 'S Incidents'
+    },
   ];
 
-  // Handle collapse toggle
   const handleCollapseToggle = () => {
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
@@ -93,30 +140,30 @@ const Sidebar = ({ onCollapse }) => {
     }
   };
 
-  // Handle navigation
   const handleNavigation = (path) => {
     navigate(path);
     if (isMobile) {
-      setIsMobileOpen(false);
+      closeSidebar();
     }
   };
 
-  // Handle logout
+  const closeSidebar = () => {
+    setIsMobileOpen(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     sessionStorage.removeItem('access_token');
     navigate('/login/admin');
-    if (isMobile) setIsMobileOpen(false);
+    if (isMobile) closeSidebar();
   };
 
-  // Check if item is active
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  // Get user info from localStorage
   const getUserInfo = () => {
     try {
       const userData = localStorage.getItem('user');
@@ -141,37 +188,41 @@ const Sidebar = ({ onCollapse }) => {
   };
 
   const userInfo = getUserInfo();
-  const errorColor = '#ef4444';
 
   return (
     <>
-      {/* Mobile Toggle Button */}
+      {/* Enhanced Mobile Toggle Button */}
       {isMobile && (
         <button
           className="mobile-toggle"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           style={{
             position: 'fixed',
-            top: '1.5rem',
-            left: '1.5rem',
-            zIndex: 40,
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${themeColors.primary}33`,
-            borderRadius: '0.75rem',
+            top: '0.1rem',
+            left: '0.01rem',
+            zIndex: 50,
+            backgroundColor: themeColors.primary + '20',
+            backdropFilter: 'blur(2px)',
+            border: `1px solid ${themeColors.primary}40`,
+            borderRadius: '12px',
             padding: '0.75rem',
-            color: themeColors.gray300,
+            color: themeColors.primaryLighter,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+            transition: 'all 0.2s ease',
+            transform: isMobileOpen ? 'scale(0.95)' : 'scale(1)',
           }}
+          onMouseEnter={(e) => e.currentTarget.style.background = themeColors.primaryDark + '20'}
+          onMouseLeave={(e) => e.currentTarget.style.background = themeColors.gray900}
         >
-          <Menu size={22} />
+          <Menu size={19}  />
         </button>
       )}
 
-      {/* Overlay for mobile */}
+      {/* Enhanced Overlay for mobile */}
       {isMobile && isMobileOpen && (
         <div 
           style={{
@@ -180,14 +231,16 @@ const Sidebar = ({ onCollapse }) => {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            zIndex: 45,
+            backgroundColor: 'rgba(2, 6, 23, 0.9)',
+            zIndex: 49,
+            backdropFilter: 'blur(4px)',
+            animation: 'fadeIn 0.2s ease',
           }}
-          onClick={() => setIsMobileOpen(false)}
+          onClick={closeSidebar}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Enhanced Sidebar */}
       <aside 
         className="sidebar"
         style={{
@@ -196,40 +249,43 @@ const Sidebar = ({ onCollapse }) => {
           left: 0,
           height: '100vh',
           zIndex: 50,
-          transition: 'all 0.3s ease',
+          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           transform: isMobileOpen ? 'translateX(0)' : isMobile ? 'translateX(-100%)' : 'translateX(0)',
           width: isMobile ? '280px' : isCollapsed ? '80px' : '280px',
         }}
       >
-        {/* Sidebar Content */}
+        {/* Enhanced Sidebar Content */}
         <div style={{
           width: '100%',
           height: '100vh',
-          background: `linear-gradient(180deg, ${themeColors.gray950} 0%, ${themeColors.gray900} 100%)`,
-          borderRight: `1px solid ${themeColors.primary}33`,
+          background: themeColors.gradientSidebar,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderRight: '1px solid rgba(148, 163, 184, 0.08)',
           display: 'flex',
           flexDirection: 'column',
-          transition: 'all 0.3s ease',
-          backdropFilter: 'blur(10px)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+
           overflow: 'hidden',
         }}>
-          {/* Header */}
+          {/* Enhanced Header */}
           <div style={{
-            padding: '1.5rem',
+            padding: isMobile ? '1.25rem 1.5rem' : '1.5rem',
             borderBottom: `1px solid ${themeColors.primary}33`,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(255, 255, 255, 0.05)',
+            justifyContent: isCollapsed && !isMobile ? 'center' : 'space-between',
+            background: 'rgba(30, 41, 59, 0.4)',
             backdropFilter: 'blur(10px)',
-            height: '72px',
+            minHeight: '72px',
+            gap: '1rem',
           }}>
             {/* Desktop Collapse Toggle */}
             {!isMobile && (
               <button
                 onClick={handleCollapseToggle}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(139, 92, 246, 0.1)',
                   border: `1px solid ${themeColors.primary}33`,
                   color: themeColors.gray300,
                   cursor: 'pointer',
@@ -237,9 +293,19 @@ const Sidebar = ({ onCollapse }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: '0.75rem',
-                  minWidth: '3rem',
-                  minHeight: '3rem',
+                  borderRadius: '12px',
+                  width: '44px',
+                  height: '44px',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = themeColors.primary + '20';
+                  e.currentTarget.style.borderColor = themeColors.primary + '66';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+                  e.currentTarget.style.borderColor = themeColors.primary + '33';
                 }}
                 title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
@@ -247,12 +313,12 @@ const Sidebar = ({ onCollapse }) => {
               </button>
             )}
 
-            {/* Mobile Close Button */}
+            {/* Enhanced Mobile Close Button */}
             {isMobile && (
               <button
-                onClick={() => setIsMobileOpen(false)}
+                onClick={closeSidebar}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(139, 92, 246, 0.1)',
                   border: `1px solid ${themeColors.primary}33`,
                   color: themeColors.gray300,
                   cursor: 'pointer',
@@ -260,9 +326,19 @@ const Sidebar = ({ onCollapse }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: '0.75rem',
-                  minWidth: '3rem',
-                  minHeight: '3rem',
+                  borderRadius: '12px',
+                  width: '44px',
+                  height: '44px',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = themeColors.primary + '20';
+                  e.currentTarget.style.borderColor = themeColors.primary + '66';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+                  e.currentTarget.style.borderColor = themeColors.primary + '33';
                 }}
               >
                 <X size={20} />
@@ -270,33 +346,40 @@ const Sidebar = ({ onCollapse }) => {
             )}
           </div>
 
-          {/* Navigation */}
+          {/* Enhanced Navigation */}
           <div style={{
             flex: 1,
             overflowY: 'auto',
             scrollbarWidth: 'thin',
             scrollbarColor: `${themeColors.primary} ${themeColors.gray800}`,
+            padding: '0.5rem 0',
           }}>
-            {/* Custom scrollbar styles */}
+            {/* Enhanced custom scrollbar styles */}
             <style>{`
               .sidebar div::-webkit-scrollbar {
-                width: 4px;
+                width: 6px;
               }
               .sidebar div::-webkit-scrollbar-track {
                 background: ${themeColors.gray800};
+                border-radius: 3px;
               }
               .sidebar div::-webkit-scrollbar-thumb {
                 background: ${themeColors.primary};
-                border-radius: 2px;
+                border-radius: 3px;
+                transition: background 0.2s ease;
               }
               .sidebar div::-webkit-scrollbar-thumb:hover {
                 background: ${themeColors.primaryLight};
+              }
+              @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
               }
             `}</style>
             
             <ul style={{
               listStyle: 'none',
-              padding: '1rem 0',
+              padding: 0,
               margin: 0,
             }}>
               {navItems.map((item) => {
@@ -320,8 +403,8 @@ const Sidebar = ({ onCollapse }) => {
                         alignItems: 'center',
                         gap: '0.75rem',
                         padding: isCollapsed && !isMobile ? '0.875rem 0.5rem' : '0.875rem 1.5rem',
-                        color: active ? themeColors.primaryLight : themeColors.gray400,
-                        transition: 'all 0.3s ease',
+                        color: active ? themeColors.primaryLighter : themeColors.gray400,
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                         cursor: 'pointer',
                         position: 'relative',
                         whiteSpace: 'nowrap',
@@ -329,10 +412,24 @@ const Sidebar = ({ onCollapse }) => {
                         width: '100%',
                         textAlign: 'left',
                         background: active 
-                          ? `linear-gradient(90deg, ${themeColors.primary}15 0%, ${themeColors.primary}10 100%)`
+                          ? `linear-gradient(90deg, ${themeColors.primary}20 0%, ${themeColors.primary}10 100%)`
                           : 'transparent',
                         border: 'none',
                         borderRight: active ? `3px solid ${themeColors.primary}` : 'none',
+                        borderRadius: '0 12px 12px 0',
+                        marginRight: '8px',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!active) {
+                          e.currentTarget.style.background = themeColors.primary + '10';
+                          e.currentTarget.style.color = themeColors.primaryLighter;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = themeColors.gray400;
+                        }
                       }}
                       title={isCollapsed && !isMobile ? item.label : ''}
                     >
@@ -344,6 +441,7 @@ const Sidebar = ({ onCollapse }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: active ? themeColors.primary : 'inherit',
+                        transition: 'color 0.2s ease',
                       }}>
                         <Icon size={20} />
                       </div>
@@ -351,47 +449,52 @@ const Sidebar = ({ onCollapse }) => {
                         fontSize: '0.875rem',
                         fontWeight: '500',
                         opacity: isCollapsed && !isMobile ? 0 : 1,
-                        transition: 'opacity 0.3s ease',
+                        transition: 'opacity 0.3s ease, transform 0.2s ease',
                         whiteSpace: 'nowrap',
                         flex: 1,
+                        transform: isCollapsed && !isMobile ? 'translateX(-20px)' : 'translateX(0)',
                       }}>
                         {item.label}
                       </span>
                       
-                      {/* Active indicator dot for collapsed state */}
+                      {/* Enhanced active indicator for collapsed state */}
                       {active && isCollapsed && !isMobile && (
                         <div style={{
                           position: 'absolute',
                           right: '0.5rem',
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          width: '6px',
-                          height: '6px',
+                          width: '8px',
+                          height: '8px',
                           borderRadius: '50%',
                           backgroundColor: themeColors.primary,
-                          boxShadow: `0 0 8px ${themeColors.primary}`,
+                          boxShadow: `0 0 12px ${themeColors.primary}`,
+                          animation: 'pulse 2s infinite',
                         }} />
                       )}
                     </button>
                     
-                    {/* Tooltip for collapsed state */}
+                    {/* Enhanced Tooltip for collapsed state */}
                     {isCollapsed && !isMobile && hoveredItem === item.id && (
                       <div style={{
                         position: 'absolute',
-                        left: 'calc(100% + 1rem)',
+                        left: 'calc(100% + 12px)',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         backgroundColor: themeColors.gray800,
-                        color: 'white',
+                        color: themeColors.gray50,
                         padding: '0.75rem 1rem',
-                        borderRadius: '0.75rem',
+                        borderRadius: '12px',
                         fontSize: '0.875rem',
                         fontWeight: '500',
                         whiteSpace: 'nowrap',
-                        zIndex: 100,
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                        zIndex: 1000,
+                        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.5)',
                         border: `1px solid ${themeColors.primary}33`,
                         minWidth: '180px',
+                        backdropFilter: 'blur(10px)',
+                        animation: 'fadeIn 0.15s ease',
+                        pointerEvents: 'none',
                       }}>
                         <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
                           {item.label}
@@ -411,30 +514,40 @@ const Sidebar = ({ onCollapse }) => {
             </ul>
           </div>
 
-          {/* Footer */}
+          {/* Enhanced Footer */}
           <div style={{
             padding: isCollapsed && !isMobile ? '1rem 0.5rem' : '1rem 1.5rem',
-            borderTop: `1px solid ${themeColors.primary}33`,
-            background: 'rgba(255, 255, 255, 0.03)',
+            borderTop: '1px solid rgba(148, 163, 184, 0.08)',
+            background: 'rgba(30, 41, 59, 0.4)',
             backdropFilter: 'blur(10px)',
           }}>
-            {/* User Info */}
+            {/* Enhanced User Info */}
             {(!isCollapsed || isMobile) && (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
                 padding: '12px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                backgroundColor: 'rgba(139, 92, 246, 0.05)',
                 borderRadius: '12px',
                 border: `1px solid ${themeColors.primary}33`,
                 marginBottom: '1rem',
-              }}>
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = themeColors.primary + '10';
+                e.currentTarget.style.borderColor = themeColors.primary + '66';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(139, 92, 246, 0.05)';
+                e.currentTarget.style.borderColor = themeColors.primary + '33';
+              }}
+              >
                 <div style={{
                   width: '40px',
                   height: '40px',
                   background: `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.primaryDark})`,
-                  borderRadius: '10px',
+                  borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -442,6 +555,7 @@ const Sidebar = ({ onCollapse }) => {
                   fontWeight: 'bold',
                   fontSize: '16px',
                   flexShrink: 0,
+                  boxShadow: `0 4px 12px ${themeColors.primary}40`,
                 }}>
                   {userInfo.initials}
                 </div>
@@ -469,7 +583,45 @@ const Sidebar = ({ onCollapse }) => {
               </div>
             )}
             
-            {/* Logout Button */}
+            {/* Enhanced Change Password Button */}
+            <button
+              onClick={() => setPasswordModalOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: isCollapsed && !isMobile ? 'center' : 'flex-start',
+                gap: '0.75rem',
+                width: '100%',
+                padding: isCollapsed && !isMobile ? '0.875rem 0.5rem' : '0.875rem 1rem',
+                background: 'rgba(139, 92, 246, 0.1)',
+                border: `1px solid rgba(139, 92, 246, 0.2)`,
+                borderRadius: '12px',
+                color: themeColors.primaryLighter,
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                marginBottom: '0.5rem',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = themeColors.primary + '20';
+                e.currentTarget.style.borderColor = themeColors.primary + '40';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+              }}
+              title={isCollapsed && !isMobile ? "Change Password" : ""}
+            >
+              <Lock size={18} />
+              {(!isCollapsed || isMobile) && (
+                <span style={{ opacity: 1, transition: 'opacity 0.3s ease', flex: 1, textAlign: 'left' }}>
+                  Change Password
+                </span>
+              )}
+            </button>
+
+            {/* Enhanced Logout Button */}
             <button
               onClick={handleLogout}
               style={{
@@ -480,12 +632,23 @@ const Sidebar = ({ onCollapse }) => {
                 width: '100%',
                 padding: isCollapsed && !isMobile ? '0.875rem 0.5rem' : '0.875rem 1rem',
                 background: 'rgba(239, 68, 68, 0.1)',
-                border: `1px solid rgba(239, 68, 68, 0.3)`,
-                borderRadius: '0.75rem',
-                color: errorColor,
+                border: `1px solid rgba(239, 68, 68, 0.2)`,
+                borderRadius: '12px',
+                color: themeColors.error,
                 fontSize: '0.875rem',
                 fontWeight: '500',
                 cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = themeColors.error + '20';
+                e.currentTarget.style.borderColor = themeColors.error + '40';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
               title={isCollapsed && !isMobile ? "Logout" : ""}
             >
@@ -504,6 +667,15 @@ const Sidebar = ({ onCollapse }) => {
           </div>
         </div>
       </aside>
+      
+      <ChangePasswordModal isOpen={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
+      
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+      `}</style>
     </>
   );
 };

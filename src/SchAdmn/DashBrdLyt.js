@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import './SchAdmn.css';
 
 const DashBrdLyt = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -181,7 +182,7 @@ const DashBrdLyt = () => {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="schadmn-app-container" style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar 
         onCollapse={(collapsed) => setSidebarCollapsed(collapsed)}
       />
@@ -193,13 +194,11 @@ const DashBrdLyt = () => {
           padding: '1.5rem',
           width: '100%',
           transition: 'margin-left 0.3s ease',
-          background: '#7d0eecff',
           minHeight: '100vh',
           overflowX: 'hidden',
           flexDirection:'column',
           display: 'flex',
           flex: 1,
-       
         }}
       >
         <Outlet />

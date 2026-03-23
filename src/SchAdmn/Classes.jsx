@@ -1,18 +1,17 @@
-// SchAdmin/Teachers.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  Users, Search, Filter, RefreshCw, Loader2, 
-  BookOpen, Mail, Calendar, Eye,
-  UserCheck, UserX, AlertCircle, ChevronDown,
-  ChevronUp, CheckCircle, XCircle
+  BookOpen, Search, Filter, RefreshCw, Loader2, 
+  Users, AlertCircle, Calendar, Eye, Mail,
+  UserCheck, UserX, ChevronDown, ChevronUp, 
+  CheckCircle, XCircle, GraduationCap, ShieldAlert
 } from 'lucide-react';
-import TeacherModal from './TeacherModal';
-import { teacherAPI, formatDate } from './utils/teacherUtils';
+import ClassModal from './ClassModal';
+import { classAPI, formatDate, calculateClassStats } from './utils/classUtils';
 
-const Teachers = () => {
-  // State for teachers data
-  const [teachers, setTeachers] = useState([]);
-  const [filteredTeachers, setFilteredTeachers] = useState([]);
+const Classes = () => {
+  // State for classes data
+  const [classes, setClasses] = useState([]);
+  const [filteredClasses, setFilteredClasses] = useState([]);
   
   // Loading and error states
   const [loading, setLoading] = useState({
@@ -24,15 +23,15 @@ const Teachers = () => {
   const [error, setError] = useState(null);
   
   // Modal state
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalView, setModalView] = useState('details');
   
   // Filters and search
   const [filters, setFilters] = useState({
     search: '',
-    showWithClass: 'all', // 'all', 'with', 'without'
-    sortBy: 'name', // 'name', 'incidents', 'date'
+    showWithTeacher: 'all', // 'all', 'with', 'without'
+    sortBy: 'name', // 'name', 'students', 'incidents', 'date'
     sortOrder: 'asc' // 'asc', 'desc'
   });
   
@@ -118,26 +117,26 @@ const Teachers = () => {
     );
   };
   
-  // Apply filters and sorting (moved before fetchTeachers)
-  const applyFilters = useCallback((teachersList) => {
-    let result = [...teachersList];
+  // Apply filters and sorting
+  const applyFilters = useCallback((classesList) => {
+    let result = [...classesList];
     
     // Apply search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
-      result = result.filter(teacher =>
-        teacher.first_name?.toLowerCase().includes(searchTerm) ||
-        teacher.last_name?.toLowerCase().includes(searchTerm) ||
-        teacher.email?.toLowerCase().includes(searchTerm) ||
-        teacher.class_name?.toLowerCase().includes(searchTerm)
+      result = result.filter(cls =>
+        cls.class_name?.toLowerCase().includes(searchTerm) ||
+        cls.teacher_first_name?.toLowerCase().includes(searchTerm) ||
+        cls.teacher_last_name?.toLowerCase().includes(searchTerm) ||
+        cls.teacher_email?.toLowerCase().includes(searchTerm)
       );
     }
     
-    // Apply class filter
-    if (filters.showWithClass === 'with') {
-      result = result.filter(teacher => teacher.class_id);
-    } else if (filters.showWithClass === 'without') {
-      result = result.filter(teacher => !teacher.class_id);
+    // Apply teacher filter
+    if (filters.showWithTeacher === 'with') {
+      result = result.filter(cls => cls.teacher_id);
+    } else if (filters.showWithTeacher === 'without') {
+      result = result.filter(cls => !cls.teacher_id);
     }
     
     // Apply sorting
@@ -145,9 +144,13 @@ const Teachers = () => {
       let aValue, bValue;
       
       switch (filters.sortBy) {
+        case 'students':
+          aValue = a.student_count || 0;
+          bValue = b.student_count || 0;
+          break;
         case 'incidents':
-          aValue = (a.individual_incidents_count || 0) + (a.class_incidents_count || 0);
-          bValue = (b.individual_incidents_count || 0) + (b.class_incidents_count || 0);
+          aValue = (a.class_incidents_count || 0) + (a.individual_incidents_count || 0);
+          bValue = (b.class_incidents_count || 0) + (b.individual_incidents_count || 0);
           break;
         case 'date':
           aValue = new Date(a.created_at || 0);
@@ -155,8 +158,8 @@ const Teachers = () => {
           break;
         case 'name':
         default:
-          aValue = `${a.first_name} ${a.last_name}`.toLowerCase();
-          bValue = `${b.first_name} ${b.last_name}`.toLowerCase();
+          aValue = a.class_name?.toLowerCase() || '';
+          bValue = b.class_name?.toLowerCase() || '';
           break;
       }
       
@@ -167,30 +170,31 @@ const Teachers = () => {
       }
     });
     
-    setFilteredTeachers(result);
+    setFilteredClasses(result);
   }, [filters]);
   
-  // Fetch teachers
-  const fetchTeachers = useCallback(async (showLoading = true) => {
+  // Fetch classes
+  const fetchClasses = useCallback(async (showLoading = true) => {
     if (showLoading) {
       setLoading(prev => ({ ...prev, initial: true }));
     }
     setError(null);
     
     try {
-      const data = await teacherAPI.getTeachers();
+      const data = await classAPI.getClasses();
       if (data.success) {
-        setTeachers(data.data || []);
-        applyFilters(data.data || []);
+        const classesList = data.data.classes || [];
+        setClasses(classesList);
+        applyFilters(classesList);
         if (showLoading) {
-          addToast('Teachers loaded successfully', 'success');
+          addToast('Classes loaded successfully', 'success');
         }
       } else {
-        setError(data.message || 'Failed to load teachers');
-        addToast(data.message || 'Failed to load teachers', 'error');
+        setError(data.message || 'Failed to load classes');
+        addToast(data.message || 'Failed to load classes', 'error');
       }
     } catch (error) {
-      console.error('Error fetching teachers:', error);
+      console.error('Error fetching classes:', error);
       setError('Network error. Please try again.');
       addToast('Network error. Please try again.', 'error');
     } finally {
@@ -206,10 +210,10 @@ const Teachers = () => {
   const handleFilterChange = useCallback((key, value) => {
     setFilters(prev => {
       const newFilters = { ...prev, [key]: value };
-      applyFilters(teachers);
+      applyFilters(classes);
       return newFilters;
     });
-  }, [applyFilters, teachers]);
+  }, [applyFilters, classes]);
   
   // Handle search with debounce
   const handleSearch = useCallback((value) => {
@@ -219,69 +223,59 @@ const Teachers = () => {
   // Refresh data
   const handleRefresh = useCallback(() => {
     setLoading(prev => ({ ...prev, refresh: true }));
-    fetchTeachers(false);
-  }, [fetchTeachers]);
+    fetchClasses(false);
+  }, [fetchClasses]);
   
-  // Open teacher modal
-  const openTeacherModal = useCallback((teacher, view = 'details') => {
-    setSelectedTeacher(teacher);
+  // Open class modal
+  const openClassModal = useCallback((classItem, view = 'details') => {
+    setSelectedClass(classItem);
     setModalView(view);
     setIsModalOpen(true);
   }, []);
   
-  // Close teacher modal
-  const closeTeacherModal = useCallback(() => {
+  // Close class modal
+  const closeClassModal = useCallback(() => {
     setIsModalOpen(false);
-    setSelectedTeacher(null);
+    setSelectedClass(null);
     setModalView('details');
   }, []);
   
-  // Handle teacher update
-  const handleTeacherUpdate = useCallback((updatedTeacher) => {
-    setTeachers(prev => 
-      prev.map(teacher => 
-        teacher.user_id === updatedTeacher.user_id 
-          ? { ...teacher, ...updatedTeacher }
-          : teacher
+  // Handle class update
+  const handleClassUpdate = useCallback((updatedClass) => {
+    setClasses(prev => 
+      prev.map(cls => 
+        cls.class_id === updatedClass.class_id 
+          ? { ...cls, ...updatedClass, class_name: updatedClass.class_name }
+          : cls
       )
     );
-    applyFilters(teachers.map(teacher => 
-      teacher.user_id === updatedTeacher.user_id 
-        ? { ...teacher, ...updatedTeacher }
-        : teacher
+    applyFilters(classes.map(cls => 
+      cls.class_id === updatedClass.class_id 
+        ? { ...cls, ...updatedClass, class_name: updatedClass.class_name }
+        : cls
     ));
-    addToast('Teacher updated successfully', 'success');
-  }, [teachers, applyFilters, addToast]);
+    addToast('Class updated successfully', 'success');
+  }, [classes, applyFilters, addToast]);
   
-  // Handle teacher delete
-  const handleTeacherDelete = useCallback((teacherId) => {
-    setTeachers(prev => prev.filter(teacher => teacher.user_id !== teacherId));
-    applyFilters(teachers.filter(teacher => teacher.user_id !== teacherId));
-    addToast('Teacher deleted successfully', 'success');
-  }, [teachers, applyFilters, addToast]);
+  // Handle class delete
+  const handleClassDelete = useCallback((classId) => {
+    setClasses(prev => prev.filter(cls => cls.class_id !== classId));
+    applyFilters(classes.filter(cls => cls.class_id !== classId));
+    addToast('Class deleted successfully', 'success');
+  }, [classes, applyFilters, addToast]);
   
   // Calculate statistics
-  const calculateStats = () => {
-    const totalTeachers = teachers.length;
-    const teachersWithClass = teachers.filter(t => t.class_id).length;
-    const teachersWithoutClass = totalTeachers - teachersWithClass;
-    const totalIncidents = teachers.reduce((sum, teacher) => 
-      sum + (teacher.individual_incidents_count || 0) + (teacher.class_incidents_count || 0), 0);
-    
-    return { totalTeachers, teachersWithClass, teachersWithoutClass, totalIncidents };
-  };
+  const stats = calculateClassStats(classes);
   
   // Initial fetch
   useEffect(() => {
-    fetchTeachers();
-  }, [fetchTeachers]);
+    fetchClasses();
+  }, [fetchClasses]);
   
   // Apply filters when filters change
   useEffect(() => {
-    applyFilters(teachers);
-  }, [applyFilters, teachers]);
-  
-  const stats = calculateStats();
+    applyFilters(classes);
+  }, [applyFilters, classes]);
   
   // CSS styles
   const styles = `
@@ -383,15 +377,6 @@ const Teachers = () => {
       background: rgba(15, 23, 42, 0.5);
       box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
     }
-    
-    .teacher-row {
-      transition: all 0.2s ease;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-    }
-    
-    .teacher-row:hover {
-      background: rgba(30, 41, 59, 0.4) !important;
-    }
   `;
 
   return (
@@ -408,19 +393,19 @@ const Teachers = () => {
         />
       ))}
       
-      {/* Teacher Modal */}
-      {isModalOpen && selectedTeacher && (
-        <TeacherModal
-          teacher={selectedTeacher}
+      {/* Class Modal */}
+      {isModalOpen && selectedClass && (
+        <ClassModal
+          classData={selectedClass}
           isOpen={isModalOpen}
-          onClose={closeTeacherModal}
-          onUpdate={handleTeacherUpdate}
-          onDelete={handleTeacherDelete}
+          onClose={closeClassModal}
+          onUpdate={handleClassUpdate}
+          onDelete={handleClassDelete}
           view={modalView}
         />
       )}
       
-      <div className="teachers-page-content" style={{ animation: 'fadeIn 0.3s ease' }}>
+      <div className="classes-page-content" style={{ animation: 'fadeIn 0.3s ease' }}>
         {/* Header */}
         <div style={{
           marginBottom: '2rem',
@@ -432,14 +417,14 @@ const Teachers = () => {
             color: '#f8fafc',
             marginBottom: '0.5rem'
           }}>
-            Teacher Management
+            Classes Management
           </h1>
           <p style={{
             fontSize: 'clamp(0.9rem, 2vw, 1rem)',
             color: '#94a3b8',
             marginBottom: '1.5rem'
           }}>
-            Manage all teachers in your school, view their incidents, and perform administrative actions
+            Manage all classes in your school, view students, incidents, and perform administrative actions
           </p>
           
           {/* Search and Actions Bar */}
@@ -465,7 +450,7 @@ const Teachers = () => {
                 color: '#94a3b8',
                 fontSize: '0.9rem'
               }}>
-                <span>Showing {filteredTeachers.length} of {teachers.length} teachers</span>
+                <span>Showing {filteredClasses.length} of {classes.length} classes</span>
                 {loading.refresh && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
@@ -517,8 +502,8 @@ const Teachers = () => {
         
         {/* Statistics Cards */}
         <div className="stats-grid">
-          {/* Total Teachers Card */}
-          <div className="stat-card" onClick={() => handleFilterChange('showWithClass', 'all')}>
+          {/* Total Classes Card */}
+          <div className="stat-card" onClick={() => handleFilterChange('showWithTeacher', 'all')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
                 background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.2) 100%)',
@@ -528,11 +513,11 @@ const Teachers = () => {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <Users size={24} color="#8b5cf6" />
+                <BookOpen size={24} color="#8b5cf6" />
               </div>
               <div>
-                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Total Teachers</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalTeachers}</div>
+                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Total Classes</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalClasses}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
@@ -540,8 +525,8 @@ const Teachers = () => {
             </div>
           </div>
           
-          {/* Teachers with Class Card */}
-          <div className="stat-card" onClick={() => handleFilterChange('showWithClass', 'with')}>
+          {/* Classes with Teacher Card */}
+          <div className="stat-card" onClick={() => handleFilterChange('showWithTeacher', 'with')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
                 background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.2) 100%)',
@@ -554,17 +539,17 @@ const Teachers = () => {
                 <UserCheck size={24} color="#22c55e" />
               </div>
               <div>
-                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>With Class</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.teachersWithClass}</div>
+                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>With Teacher</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.classesWithTeacher}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-              {stats.teachersWithClass > 0 ? `${Math.round((stats.teachersWithClass / stats.totalTeachers) * 100)}% of total` : 'Click to view'}
+              {stats.classesWithTeacher > 0 ? `${Math.round((stats.classesWithTeacher / stats.totalClasses) * 100)}% of total` : 'Click to view'}
             </div>
           </div>
           
-          {/* Teachers without Class Card */}
-          <div className="stat-card" onClick={() => handleFilterChange('showWithClass', 'without')}>
+          {/* Classes without Teacher Card */}
+          <div className="stat-card" onClick={() => handleFilterChange('showWithTeacher', 'without')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
                 background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.2) 100%)',
@@ -577,22 +562,17 @@ const Teachers = () => {
                 <UserX size={24} color="#f59e0b" />
               </div>
               <div>
-                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Without Class</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.teachersWithoutClass}</div>
+                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Without Teacher</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.classesWithoutTeacher}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-              {stats.teachersWithoutClass > 0 ? `${Math.round((stats.teachersWithoutClass / stats.totalTeachers) * 100)}% of total` : 'Click to view'}
+              {stats.classesWithoutTeacher > 0 ? `${Math.round((stats.classesWithoutTeacher / stats.totalClasses) * 100)}% of total` : 'Click to view'}
             </div>
           </div>
           
           {/* Total Incidents Card */}
-          <div className="stat-card" style={{
-            background: 'rgba(30, 41, 59, 0.6)',
-            borderRadius: '12px',
-            padding: '1.25rem',
-            border: '1px solid rgba(148, 163, 184, 0.1)'
-          }}>
+          <div className="stat-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
                 background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.2) 100%)',
@@ -610,12 +590,35 @@ const Teachers = () => {
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-              Reported by all teachers
+              Across all classes
+            </div>
+          </div>
+          
+          {/* Total Students Card */}
+          <div className="stat-card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.2) 100%)',
+                borderRadius: '10px',
+                padding: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <GraduationCap size={24} color="#3b82f6" />
+              </div>
+              <div>
+                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Total Students</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalStudents}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+              Across all classes
             </div>
           </div>
         </div>
         
-        {/* Teachers Table */}
+        {/* Classes Table */}
         <div style={{
           background: 'rgba(30, 41, 59, 0.6)',
           borderRadius: '12px',
@@ -639,19 +642,20 @@ const Teachers = () => {
               <div style={{ marginTop: '1rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px', padding: '1.25rem', border: '1px solid rgba(148, 163, 184, 0.1)', animation: 'fadeIn 0.3s ease' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>Class Assignment</label>
-                    <select value={filters.showWithClass} onChange={(e) => handleFilterChange('showWithClass', e.target.value)} style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '8px', color: '#f8fafc', fontSize: '0.9rem', cursor: 'pointer' }}>
-                      <option value="all">All Teachers</option>
-                      <option value="with">With Class Assignment</option>
-                      <option value="without">Without Class Assignment</option>
+                    <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>Teacher Assignment</label>
+                    <select value={filters.showWithTeacher} onChange={(e) => handleFilterChange('showWithTeacher', e.target.value)} style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '8px', color: '#f8fafc', fontSize: '0.9rem', cursor: 'pointer' }}>
+                      <option value="all">All Classes</option>
+                      <option value="with">With Teacher Assigned</option>
+                      <option value="without">Without Teacher</option>
                     </select>
                   </div>
                   <div>
                     <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>Sort By</label>
                     <select value={filters.sortBy} onChange={(e) => handleFilterChange('sortBy', e.target.value)} style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '8px', color: '#f8fafc', fontSize: '0.9rem', cursor: 'pointer' }}>
-                      <option value="name">Name (A-Z)</option>
+                      <option value="name">Class Name (A-Z)</option>
+                      <option value="students">Student Count</option>
                       <option value="incidents">Total Incidents</option>
-                      <option value="date">Join Date</option>
+                      <option value="date">Creation Date</option>
                     </select>
                   </div>
                   <div>
@@ -665,8 +669,8 @@ const Teachers = () => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
                   <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Active filters:</span>
                   {filters.search && (<span style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#c4b5fd', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}><Search size={10} />Search: "{filters.search}"</span>)}
-                  {filters.showWithClass !== 'all' && (<span style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}><Filter size={10} />{filters.showWithClass === 'with' ? 'With Class' : 'Without Class'}</span>)}
-                  <button onClick={() => setFilters({ search: '', showWithClass: 'all', sortBy: 'name', sortOrder: 'asc' })} style={{ background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '6px', padding: '0.25rem 0.75rem', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer' }}>Clear all</button>
+                  {filters.showWithTeacher !== 'all' && (<span style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}><Filter size={10} />{filters.showWithTeacher === 'with' ? 'With Teacher' : 'Without Teacher'}</span>)}
+                  <button onClick={() => setFilters({ search: '', showWithTeacher: 'all', sortBy: 'name', sortOrder: 'asc' })} style={{ background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '6px', padding: '0.25rem 0.75rem', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer' }}>Clear all</button>
                 </div>
               </div>
             )}
@@ -692,8 +696,8 @@ const Teachers = () => {
                 gap: '0.75rem',
                 margin: 0
               }}>
-                <Users size={20} />
-                Teachers List
+                <BookOpen size={20} />
+                Classes List
               </h2>
               
               {/* Integrated Search Bar */}
@@ -707,14 +711,13 @@ const Teachers = () => {
                 }} />
                 <input
                   type="text"
-                  placeholder="Filter teachers..."
+                  placeholder="Filter classes..."
                   value={filters.search}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="search-input-integrated"
                 />
               </div>
             </div>
-
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -725,7 +728,7 @@ const Teachers = () => {
               {loading.initial ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
-                  Loading teachers...
+                  Loading classes...
                 </span>
               ) : error ? (
                 <span style={{ color: '#fca5a5' }}>
@@ -734,7 +737,7 @@ const Teachers = () => {
                 </span>
               ) : (
                 <span>
-                  {filteredTeachers.length} teacher{filteredTeachers.length !== 1 ? 's' : ''} found
+                  {filteredClasses.length} class{filteredClasses.length !== 1 ? 'es' : ''} found
                 </span>
               )}
             </div>
@@ -745,14 +748,14 @@ const Teachers = () => {
             {loading.initial ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
                 <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-                <p>Loading teachers...</p>
+                <p>Loading classes...</p>
               </div>
             ) : error ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
                 <AlertCircle size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
                 <p style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#fca5a5' }}>{error}</p>
                 <button
-                  onClick={() => fetchTeachers()}
+                  onClick={() => fetchClasses()}
                   style={{
                     background: 'rgba(30, 41, 59, 0.8)',
                     border: '1px solid rgba(148, 163, 184, 0.2)',
@@ -778,21 +781,21 @@ const Teachers = () => {
                   Try Again
                 </button>
               </div>
-            ) : filteredTeachers.length === 0 ? (
+            ) : filteredClasses.length === 0 ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
-                <Users size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                <p style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>No teachers found</p>
+                <BookOpen size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                <p style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>No classes found</p>
                 <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>
-                  {filters.search || filters.showWithClass !== 'all' 
+                  {filters.search || filters.showWithTeacher !== 'all' 
                     ? 'Try changing your filters or search query' 
-                    : 'No teachers have been added yet'}
+                    : 'No classes have been created yet'}
                 </p>
-                {(filters.search || filters.showWithClass !== 'all') && (
+                {(filters.search || filters.showWithTeacher !== 'all') && (
                   <button
                     onClick={() => {
                       setFilters({
                         search: '',
-                        showWithClass: 'all',
+                        showWithTeacher: 'all',
                         sortBy: 'name',
                         sortOrder: 'asc'
                       });
@@ -823,13 +826,21 @@ const Teachers = () => {
               <table style={{
                 width: '100%',
                 borderCollapse: 'collapse',
-                minWidth: '800px'
+                minWidth: '900px'
               }}>
                 <thead>
                   <tr style={{
                     background: 'rgba(15, 23, 42, 0.3)',
                     borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
                   }}>
+                    <th style={{
+                      padding: '1rem',
+                      textAlign: 'left',
+                      color: '#cbd5e1',
+                      fontWeight: '600',
+                      fontSize: '0.9rem',
+                      whiteSpace: 'nowrap'
+                    }}>Class</th>
                     <th style={{
                       padding: '1rem',
                       textAlign: 'left',
@@ -845,15 +856,7 @@ const Teachers = () => {
                       fontWeight: '600',
                       fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
-                    }}>Email</th>
-                    <th style={{
-                      padding: '1rem',
-                      textAlign: 'left',
-                      color: '#cbd5e1',
-                      fontWeight: '600',
-                      fontSize: '0.9rem',
-                      whiteSpace: 'nowrap'
-                    }}>Class Assignment</th>
+                    }}>Students</th>
                     <th style={{
                       padding: '1rem',
                       textAlign: 'left',
@@ -869,7 +872,7 @@ const Teachers = () => {
                       fontWeight: '600',
                       fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
-                    }}>Joined</th>
+                    }}>Created</th>
                     <th style={{
                       padding: '1rem',
                       textAlign: 'left',
@@ -881,101 +884,119 @@ const Teachers = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTeachers.map((teacher, index) => (
+                  {filteredClasses.map((cls, index) => (
                     <tr 
-                      key={teacher.user_id} 
+                      key={cls.class_id} 
                       className="table-row"
                       style={{
                         borderBottom: '1px solid rgba(148, 163, 184, 0.05)',
                         cursor: 'pointer',
-                        background: index % 2 === 0 ? 'transparent' : 'rgba(15, 23, 42, 0.15)' // Zebra striping
+                        background: index % 2 === 0 ? 'transparent' : 'rgba(15, 23, 42, 0.15)'
                       }}
-                      onClick={() => openTeacherModal(teacher, 'details')}
+                      onClick={() => openClassModal(cls)}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = 'rgba(15, 23, 42, 0.3)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = index % 2 === 0 ? 'transparent' : 'rgba(15, 23, 42, 0.15)';
+                        e.currentTarget.style.background = 'transparent';
                       }}
                     >
                       <td style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <div style={{
-                            width: '36px',
-                            height: '36px',
+                            width: '40px',
+                            height: '40px',
                             background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                            borderRadius: '8px',
+                            borderRadius: '10px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: 'white',
                             fontWeight: 'bold',
-                            fontSize: '14px',
+                            fontSize: '16px',
                             flexShrink: 0
                           }}>
-                            {teacher.first_name?.[0]}{teacher.last_name?.[0]}
+                            {cls.class_name?.substring(0, 2).toUpperCase()}
                           </div>
                           <div>
                             <div style={{ 
                               color: '#f1f5f9', 
                               fontWeight: '600',
-                              marginBottom: '2px'
+                              marginBottom: '2px',
+                              fontSize: '1.05rem'
                             }}>
-                              {teacher.first_name} {teacher.last_name}
+                              {cls.class_name}
                             </div>
                             <div style={{ 
                               fontSize: '0.8rem', 
                               color: '#94a3b8'
                             }}>
-                              ID: {teacher.user_id?.substring(0, 8)}...
+                              ID: {cls.class_id?.substring(0, 8)}...
                             </div>
                           </div>
                         </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Mail size={14} color="#94a3b8" />
-                          <span style={{ color: '#e2e8f0' }}>{teacher.email}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '1rem' }}>
-                        {teacher.class_id ? (
-                          <div style={{ 
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            background: 'rgba(34, 197, 94, 0.1)',
-                            color: '#86efac',
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: '8px',
-                            fontSize: '0.85rem',
-                            border: '1px solid rgba(34, 197, 94, 0.2)'
-                          }}>
-                            <BookOpen size={14} />
-                            {teacher.class_name}
+                        {cls.teacher_id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{
+                              width: '36px',
+                              height: '36px',
+                              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontWeight: 'bold',
+                              fontSize: '14px',
+                              flexShrink: 0
+                            }}>
+                              {cls.teacher_first_name?.[0]}{cls.teacher_last_name?.[0]}
+                            </div>
+                            <div>
+                              <div style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '2px' }}>
+                                {cls.teacher_first_name} {cls.teacher_last_name}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#94a3b8', fontSize: '0.8rem' }}>
+                                <Mail size={12} />
+                                {cls.teacher_email}
+                              </div>
+                            </div>
                           </div>
                         ) : (
-                          <span style={{ 
+                          <div style={{ 
                             color: '#f59e0b', 
                             fontStyle: 'italic',
-                            fontSize: '0.9rem'
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
                           }}>
-                            No class assigned
-                          </span>
+                            <UserX size={16} />
+                            No teacher assigned
+                          </div>
                         )}
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#e2e8f0' }}>
+                          <Users size={16} color="#94a3b8" />
+                          <span style={{ fontWeight: '500' }}>{cls.student_count || 0}</span>
+                          <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Students</span>
+                        </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <AlertCircle size={12} color="#94a3b8" />
                             <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>
-                              Individual: <strong>{teacher.individual_incidents_count || 0}</strong>
+                              Class: <strong>{cls.class_incidents_count || 0}</strong>
                             </span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Users size={12} color="#94a3b8" />
+                            <ShieldAlert size={12} color="#94a3b8" />
                             <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>
-                              Class: <strong>{teacher.class_incidents_count || 0}</strong>
+                              Individual: <strong>{cls.individual_incidents_count || 0}</strong>
                             </span>
                           </div>
                         </div>
@@ -984,7 +1005,7 @@ const Teachers = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <Calendar size={14} color="#94a3b8" />
                           <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>
-                            {formatDate(teacher.created_at)}
+                            {formatDate(cls.created_at)}
                           </span>
                         </div>
                       </td>
@@ -993,7 +1014,7 @@ const Teachers = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              openTeacherModal(teacher, 'details');
+                              openClassModal(cls, 'details');
                             }}
                             style={{
                               background: 'rgba(30, 41, 59, 0.8)',
@@ -1024,7 +1045,7 @@ const Teachers = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              openTeacherModal(teacher, 'edit');
+                              openClassModal(cls, 'edit');
                             }}
                             style={{
                               background: 'rgba(59, 130, 246, 0.1)',
@@ -1061,7 +1082,7 @@ const Teachers = () => {
           </div>
           
           {/* Table Footer */}
-          {!loading.initial && !error && filteredTeachers.length > 0 && (
+          {!loading.initial && !error && filteredClasses.length > 0 && (
             <div style={{
               padding: '1rem 1.5rem',
               borderTop: '1px solid rgba(148, 163, 184, 0.1)',
@@ -1073,13 +1094,14 @@ const Teachers = () => {
               fontSize: '0.85rem'
             }}>
               <div>
-                Showing {filteredTeachers.length} of {teachers.length} teachers
+                Showing {filteredClasses.length} of {classes.length} classes
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span>Sorted by:</span>
                 <span style={{ color: '#cbd5e1', fontWeight: '500' }}>
-                  {filters.sortBy === 'name' ? 'Name' : 
-                   filters.sortBy === 'incidents' ? 'Total Incidents' : 'Join Date'} 
+                  {filters.sortBy === 'name' ? 'Class Name' : 
+                   filters.sortBy === 'students' ? 'Student Count' : 
+                   filters.sortBy === 'incidents' ? 'Total Incidents' : 'Creation Date'} 
                   ({filters.sortOrder === 'asc' ? 'A-Z' : 'Z-A'})
                 </span>
               </div>
@@ -1088,7 +1110,7 @@ const Teachers = () => {
         </div>
         
         {/* Empty State Instructions */}
-        {!loading.initial && teachers.length === 0 && !error && (
+        {!loading.initial && classes.length === 0 && !error && (
           <div style={{
             marginTop: '2rem',
             padding: '2rem',
@@ -1098,12 +1120,12 @@ const Teachers = () => {
             textAlign: 'center',
             color: '#94a3b8'
           }}>
-            <Users size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+            <BookOpen size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
             <h3 style={{ fontSize: '1.25rem', color: '#cbd5e1', marginBottom: '0.5rem' }}>
-              No Teachers Yet
+              No Classes Yet
             </h3>
             <p style={{ marginBottom: '1rem', maxWidth: '500px', margin: '0 auto 1rem' }}>
-              You haven't added any teachers to your school yet. Teachers can be created from the Dashboard page.
+              You haven't created any classes in your school yet. Classes can be created from the Dashboard page.
             </p>
             <button
               onClick={() => window.location.href = '/admin/dashboard'}
@@ -1130,7 +1152,7 @@ const Teachers = () => {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <Users size={16} />
+              <BookOpen size={16} />
               Go to Dashboard
             </button>
           </div>
@@ -1140,4 +1162,4 @@ const Teachers = () => {
   );
 };
 
-export default Teachers;
+export default Classes;

@@ -1,343 +1,209 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  GraduationCap, 
-  Users, 
-  BookOpen,
-  Shield,
-  ArrowLeft
-} from 'lucide-react';
+import { Shield, GraduationCap, BookOpen, ArrowLeft, ArrowRight, ArrowDown } from 'lucide-react';
 
 const RoleSelection = () => {
-  const [scrolled, setScrolled] = useState(false);
-  const [hoveredCard, setHoveredCard] = React.useState(null);
-  const [backHovered, setBackHovered] = React.useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [hoveredCard, setHoveredCard] = useState(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 100;
-      setScrolled(isScrolled);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    window.scrollTo(0, 0); // Scroll to top on mount
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const containerStyle = {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #1e1b4b 0%, #2d2a6e 50%, #1e1b4b 100%)',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
-    paddingTop: '0rem'
-  };
-
-  const contentStyle = {
-    maxWidth: '1200px',
-    width: '100%',
-    color: 'white',
-    margin: '0 auto',
-    padding: '1rem 1rem'
-  };
-
-  const fixedBackButtonStyle = {
-    position: 'fixed',
-    top: '1rem',
-    left: '1rem',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    color: '#c4b5fd',
-    textDecoration: 'none',
-    padding: '0.5rem 1rem',
-    borderRadius: '10px',
-    transition: 'all 0.3s ease',
-    background: scrolled ? 'rgba(30, 27, 75, 0.95)' : 'rgba(255, 255, 255, 0.05)',
-    backdropFilter: 'blur(10px)',
-    fontSize: '0.95rem',
-    fontWeight: '500',
-    zIndex: 1000,
-    border: scrolled ? '1px solid rgba(139, 92, 246, 0.2)' : 'none',
-    boxShadow: scrolled ? '0 4px 15px rgba(0, 0, 0, 0.3)' : 'none'
-  };
-
-  const backButtonHoverStyle = {
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: '#faf5ff',
-    transform: 'translateX(-3px)'
-  };
-
-  const headerStyle = {
-    textAlign: 'center',
-    marginBottom: '2rem'
-  };
-
-  const logoStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.5rem'
-  };
-
-  const logoIconStyle = {
-    width: '2.5rem',
-    height: '2.5rem',
-    color: '#8b5cf6'
-  };
-
-  const brandTextStyle = {
-    fontSize: '2.25rem',
-    fontWeight: '800',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #f59e0b 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
-  };
-
-  const titleStyle = {
-    fontSize: '2.5rem',
-    fontWeight: '700',
-    marginBottom: '0.75rem',
-    background: 'linear-gradient(135deg, #faf5ff 0%, #ddd6fe 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
-  };
-
-  const subtitleStyle = {
-    fontSize: '1.125rem',
-    color: '#ddd6fe',
-    maxWidth: '600px',
-    margin: '0 auto',
-    lineHeight: '1.6'
-  };
-
-  const rolesGridStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-    gap: '1.5rem',
-    marginBottom: '2.5rem'
-  };
-
-  const roleCardStyle = {
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '14px',
-    padding: '2rem 1.5rem',
-    textAlign: 'center',
-    transition: 'all 0.3s ease',
-    backdropFilter: 'blur(10px)',
-    cursor: 'pointer',
-    textDecoration: 'none',
-    display: 'block',
-    color: 'inherit'
-  };
-
-  const roleCardHoverStyle = {
-    transform: 'translateY(-4px)',
-    background: 'rgba(255, 255, 255, 0.08)',
-    boxShadow: '0 15px 30px rgba(0, 0, 0, 0.2)'
-  };
-
-  const roleIconStyle = {
-    width: '3.5rem',
-    height: '3.5rem',
-    margin: '0 auto 1.25rem',
-    padding: '0.75rem',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  };
-
-  const roleTitleStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '600',
-    marginBottom: '0.75rem',
-    color: '#faf5ff'
-  };
-
-  const roleDescriptionStyle = {
-    color: '#c4b5fd',
-    marginBottom: '1.5rem',
-    lineHeight: '1.6',
-    fontSize: '0.95rem'
-  };
-
-  const roleFeaturesStyle = {
-    listStyle: 'none',
-    marginBottom: '1.5rem',
-    textAlign: 'left'
-  };
-
-  const roleFeatureItemStyle = {
-    color: '#c4b5fd',
-    marginBottom: '0.5rem',
-    paddingLeft: '0',
-    position: 'relative',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem'
-  };
-
-  const checkIconStyle = {
-    color: '#10b981',
-    fontWeight: 'bold',
-    fontSize: '1rem',
-    flexShrink: '0'
-  };
-
-  const buttonStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    padding: '0.875rem 1.25rem',
-    border: 'none',
-    borderRadius: '10px',
-    fontSize: '0.95rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    textDecoration: 'none'
-  };
-
-  const footerStyle = {
-    marginTop: '2.5rem',
-    paddingTop: '1.5rem',
-    color: '#c4b5fd',
-    fontSize: '0.85rem',
-    textAlign: 'center'
-  };
+  // Breakpoints
+  const isMobile = windowWidth <= 768;
 
   const roles = [
     {
-      id: 'school-admin',
+      id: 'admin',
       title: 'School Admin',
-      icon: Users,
-      description: 'Complete school management, teacher oversight, and serious incident resolution with full reporting capabilities.',
-      features: [
-        'Teacher Management',
-        'S-tier Case Review', 
-        'School Analytics',
-        'Report Generation'
-      ],
-      color: '#8b5cf6',
-      buttonColor: '#8b5cf6',
-      buttonHoverColor: '#7c3aed',
-      route: '/login/admin'
+      icon: Shield,
+      desc: 'Complete school management, teacher oversight, and serious incident resolution.',
+      color: '#8b5cf6', // Violet
+      route: '/login/admin',
+      gradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(124, 58, 237, 0))'
     },
     {
       id: 'teacher',
       title: 'Teacher',
       icon: GraduationCap,
-      description: 'Mobile-first incident reporting, class behavior tracking, and student management with real-time analytics.',
-      features: [
-        'Incident Reporting (A/B/S-tier)',
-        'Class Behavior Tracking',
-        'Student Management', 
-        'Real-time Analytics'
-      ],
-      color: '#60a5fa',
-      buttonColor: '#60a5fa',
-      buttonHoverColor: '#3b82f6',
-      route: '/teacher/login'
+      desc: 'Mobile-first incident reporting, class behavior tracking, and analytics.',
+      color: '#f59e0b', // Amber
+      route: '/teacher/login',
+      gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0))'
     },
     {
       id: 'student',
       title: 'Student',
       icon: BookOpen,
-      description: 'Transparent access to personal records, behavior tracking, and appeal submission for fair process.',
-      features: [
-        'Incident History',
-        'Progress Tracking',
-        'Appeal System',
-        'Behavior Insights'
-      ],
-      color: '#10b981',
-      buttonColor: '#10b981',
-      buttonHoverColor: '#059669',
-      route: '/students/login'
+      desc: 'Transparent access to personal records, behavior tracking, and appeals.',
+      color: '#10b981', // Emerald
+      route: '/students/login',
+      gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0))'
     }
   ];
 
   return (
-    <div style={containerStyle}>
-      <Link 
-        to="/"
-        style={{
-          ...fixedBackButtonStyle,
-          ...(backHovered ? backButtonHoverStyle : {})
-        }}
-        onMouseEnter={() => setBackHovered(true)}
-        onMouseLeave={() => setBackHovered(false)}
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%)',
+      color: '#f8fafc',
+      fontFamily: '"Inter", -apple-system, sans-serif',
+      position: 'relative',
+      overflow: 'hidden',
+      padding: isMobile ? '1.5rem 1rem' : '2.5rem 2rem',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      {/* Background glow orbs for elite aesthetics */}
+      <div style={{
+        position: 'absolute', top: '-10%', left: '-10%', width: '50vw', height: '50vw',
+        background: '#8b5cf6', filter: 'blur(150px)', opacity: 0.15, zIndex: 0, borderRadius: '50%',
+        pointerEvents: 'none'
+      }} />
+      <div style={{
+        position: 'absolute', bottom: '-10%', right: '-10%', width: '40vw', height: '40vw',
+        background: '#10b981', filter: 'blur(150px)', opacity: 0.15, zIndex: 0, borderRadius: '50%',
+        pointerEvents: 'none'
+      }} />
+
+      {/* Back Button */}
+      <Link to="/" style={{
+        position: 'absolute', top: isMobile ? '1.5rem' : '2.5rem', left: isMobile ? '1.5rem' : '3rem',
+        display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', textDecoration: 'none',
+        fontSize: '0.95rem', fontWeight: 500, zIndex: 10, transition: 'color 0.3s ease'
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
+      onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
       >
-        <ArrowLeft size={16} />
-        <span>Back to Home</span>
+        <ArrowLeft size={18} />
+        Back to Home
       </Link>
 
-      <div style={contentStyle}>
-        <div style={headerStyle}>
-          <div style={logoStyle}>
-            <Shield style={logoIconStyle} />
-            <span style={brandTextStyle}>Wazi</span>
+      <div style={{ 
+        position: 'relative', zIndex: 1, maxWidth: '1200px', width: '100%', 
+        display: 'flex', flexDirection: 'column', alignItems: 'center' 
+      }}>
+        
+        {/* Header Section */}
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: isMobile ? '2.5rem' : '3.5rem', 
+          marginTop: isMobile ? '2.5rem' : '0' 
+        }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem'
+          }}>
+            <img src="/favicon.svg" alt="Lania" style={{ width: '48px', height: '48px' }} />
           </div>
-          <h1 style={titleStyle}>Select Your Role</h1>
-          <p style={subtitleStyle}>
-            Choose how you want to access the Wazi discipline management system
+          <h1 style={{ 
+            fontSize: isMobile ? '2.5rem' : '3.5rem', fontWeight: 800, 
+            marginBottom: '1rem', letterSpacing: '-1px' 
+          }}>
+            Select Your Portal
+          </h1>
+          <p style={{ 
+            color: '#94a3b8', fontSize: isMobile ? '1rem' : '1.15rem', 
+            maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 
+          }}>
+            Choose the access level that matches your position in the school system to continue.
           </p>
         </div>
 
-        <div style={rolesGridStyle}>
+        {isMobile && (
+          <div style={{ position: 'fixed', bottom: '2.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
+            <div className="scroll-indicator" style={{ marginTop: 0 }}>
+              <ArrowDown size={28} color="#8b5cf6" />
+            </div>
+          </div>
+        )}
+
+        {/* Roles Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+          gap: isMobile ? '1.5rem' : '2rem',
+          width: '100%',
+          padding: isMobile ? '0' : '0 1rem'
+        }}>
           {roles.map((role) => {
-            const RoleIcon = role.icon;
+            const Icon = role.icon;
             const isHovered = hoveredCard === role.id;
-            
+
             return (
               <Link
                 key={role.id}
                 to={role.route}
-                style={{
-                  ...roleCardStyle,
-                  ...(isHovered ? roleCardHoverStyle : {})
-                }}
                 onMouseEnter={() => setHoveredCard(role.id)}
                 onMouseLeave={() => setHoveredCard(null)}
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  background: 'rgba(30, 41, 59, 0.4)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: `1px solid ${isHovered ? role.color : 'rgba(255, 255, 255, 0.08)'}`,
+                  borderRadius: '24px',
+                  padding: isMobile ? '2.5rem 2rem' : '3rem 2rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                  transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+                  boxShadow: isHovered ? `0 20px 40px -10px ${role.color}40` : '0 10px 30px -10px rgba(0,0,0,0.3)'
+                }}
               >
+                {/* Gradient background overlay on hover */}
                 <div style={{
-                  ...roleIconStyle,
-                  background: `rgba(${parseInt(role.color.slice(1, 3), 16)}, ${parseInt(role.color.slice(3, 5), 16)}, ${parseInt(role.color.slice(5, 7), 16)}, 0.1)`,
-                  color: role.color
-                }}>
-                  <RoleIcon size={28} />
-                </div>
-                
-                <h3 style={roleTitleStyle}>{role.title}</h3>
-                <p style={roleDescriptionStyle}>{role.description}</p>
-                
-                <ul style={roleFeaturesStyle}>
-                  {role.features.map((feature, index) => (
-                    <li key={index} style={roleFeatureItemStyle}>
-                      <span style={checkIconStyle}>✓</span>
-                      <span>• {feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  background: role.gradient, opacity: isHovered ? 1 : 0, transition: 'opacity 0.4s ease', zIndex: 0
+                }} />
 
-                <div style={{
-                  ...buttonStyle,
-                  background: isHovered ? role.buttonHoverColor : role.buttonColor,
-                  color: 'white',
-                  transform: isHovered ? 'scale(1.02)' : 'scale(1)'
-                }}>
-                  Access Portal
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  
+                  {/* Icon Block */}
+                  <div style={{
+                    width: '64px', height: '64px', borderRadius: '20px',
+                    background: `rgba(${parseInt(role.color.slice(1,3), 16)}, ${parseInt(role.color.slice(3,5), 16)}, ${parseInt(role.color.slice(5,7), 16)}, 0.1)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    marginBottom: '2rem', transition: 'all 0.3s ease',
+                    transform: isHovered ? 'scale(1.1) rotate(5deg)' : 'scale(1)',
+                    color: role.color,
+                    border: `1px solid ${role.color}40`
+                  }}>
+                    <Icon size={32} />
+                  </div>
+
+                  {/* Text Content */}
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>{role.title}</h3>
+                  <p style={{ color: '#94a3b8', lineHeight: 1.6, flexGrow: 1, marginBottom: '2.5rem', fontSize: '0.95rem' }}>
+                    {role.desc}
+                  </p>
+
+                  {/* Action Button */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    padding: '1rem 1.25rem', borderRadius: '12px',
+                    background: isHovered ? role.color : 'rgba(15, 23, 42, 0.6)',
+                    color: isHovered ? '#fff' : '#f8fafc',
+                    fontWeight: 600, transition: 'all 0.3s ease'
+                  }}>
+                    <span>Access Portal</span>
+                    <ArrowRight size={18} style={{ 
+                      transform: isHovered ? 'translateX(4px)' : 'translateX(0)', 
+                      transition: 'transform 0.3s ease' 
+                    }} />
+                  </div>
                 </div>
               </Link>
             );
           })}
-        </div>
-
-        <div style={footerStyle}>
-          <p>Select the role that matches your position in the school system</p>
         </div>
       </div>
     </div>

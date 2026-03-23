@@ -1,38 +1,44 @@
-// SchAdmin/Teachers.jsx
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+// Students.jsx - Updated version with efficient filtering
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { 
   Users, Search, Filter, RefreshCw, Loader2, 
-  BookOpen, Mail, Calendar, Eye,
-  UserCheck, UserX, AlertCircle, ChevronDown,
-  ChevronUp, CheckCircle, XCircle
+  AlertCircle, Calendar, Eye, Edit2,
+  UserX, ChevronDown, ChevronUp, 
+  CheckCircle, XCircle, GraduationCap, ShieldAlert,
+  BookOpen, Home
 } from 'lucide-react';
-import TeacherModal from './TeacherModal';
-import { teacherAPI, formatDate } from './utils/teacherUtils';
+import StudentModal from './StudentModal';
+import { studentAPI, classAPI, formatDate, calculateStudentStats, getInitials } from './utils/studentUtils';
 
-const Teachers = () => {
-  // State for teachers data
-  const [teachers, setTeachers] = useState([]);
-  const [filteredTeachers, setFilteredTeachers] = useState([]);
+const Students = () => {
+  // State for students data
+  const [students, setStudents] = useState([]);
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  
+  // State for classes (for filter dropdown)
+  const [classes, setClasses] = useState([]);
   
   // Loading and error states
   const [loading, setLoading] = useState({
     initial: true,
     refresh: false,
-    action: false
+    action: false,
+    classes: false
   });
   
   const [error, setError] = useState(null);
   
   // Modal state
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalView, setModalView] = useState('details');
   
   // Filters and search
   const [filters, setFilters] = useState({
     search: '',
-    showWithClass: 'all', // 'all', 'with', 'without'
-    sortBy: 'name', // 'name', 'incidents', 'date'
+    classFilter: 'all', // 'all' or class_id
+    incidentFilter: 'all', // 'all', 'with_incidents', 'without_incidents'
+    sortBy: 'name', // 'name', 'admission', 'incidents', 'date', 'class'
     sortOrder: 'asc' // 'asc', 'desc'
   });
   
@@ -62,6 +68,76 @@ const Teachers = () => {
   const removeToast = useCallback((id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
+  
+  // UseMemo to compute filtered students efficiently
+  const computedFilteredStudents = useMemo(() => {
+    let result = [...students];
+    
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      result = result.filter(student =>
+        (student.first_name?.toLowerCase().includes(searchTerm) ||
+        student.last_name?.toLowerCase().includes(searchTerm) ||
+        student.admission_number?.toLowerCase().includes(searchTerm) ||
+        student.class_name?.toLowerCase().includes(searchTerm))
+      );
+    }
+    
+    // Apply class filter
+    if (filters.classFilter && filters.classFilter !== 'all') {
+      result = result.filter(student => student.class_id === filters.classFilter);
+    }
+    
+    // Apply incident filter
+    if (filters.incidentFilter === 'with_incidents') {
+      result = result.filter(student => (student.total_incidents || 0) > 0);
+    } else if (filters.incidentFilter === 'without_incidents') {
+      result = result.filter(student => (student.total_incidents || 0) === 0);
+    }
+    
+    // Apply sorting
+    result.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (filters.sortBy) {
+        case 'admission':
+          aValue = a.admission_number?.toLowerCase() || '';
+          bValue = b.admission_number?.toLowerCase() || '';
+          break;
+        case 'incidents':
+          aValue = a.total_incidents || 0;
+          bValue = b.total_incidents || 0;
+          break;
+        case 'date':
+          aValue = new Date(a.created_at || 0);
+          bValue = new Date(b.created_at || 0);
+          break;
+        case 'class':
+          aValue = a.class_name?.toLowerCase() || '';
+          bValue = b.class_name?.toLowerCase() || '';
+          break;
+        case 'name':
+        default:
+          aValue = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
+          bValue = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
+          break;
+      }
+      
+      if (filters.sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+    
+    return result;
+  }, [students, filters]);
+  
+  // Update filtered students when computed value changes
+  useEffect(() => {
+    setFilteredStudents(computedFilteredStudents);
+  }, [computedFilteredStudents]);
   
   // Toast component
   const Toast = ({ message, type = 'success', onClose }) => {
@@ -118,79 +194,46 @@ const Teachers = () => {
     );
   };
   
-  // Apply filters and sorting (moved before fetchTeachers)
-  const applyFilters = useCallback((teachersList) => {
-    let result = [...teachersList];
+  // Fetch classes for filter dropdown
+  const fetchClasses = useCallback(async () => {
+    setLoading(prev => ({ ...prev, classes: true }));
     
-    // Apply search filter
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      result = result.filter(teacher =>
-        teacher.first_name?.toLowerCase().includes(searchTerm) ||
-        teacher.last_name?.toLowerCase().includes(searchTerm) ||
-        teacher.email?.toLowerCase().includes(searchTerm) ||
-        teacher.class_name?.toLowerCase().includes(searchTerm)
-      );
-    }
-    
-    // Apply class filter
-    if (filters.showWithClass === 'with') {
-      result = result.filter(teacher => teacher.class_id);
-    } else if (filters.showWithClass === 'without') {
-      result = result.filter(teacher => !teacher.class_id);
-    }
-    
-    // Apply sorting
-    result.sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (filters.sortBy) {
-        case 'incidents':
-          aValue = (a.individual_incidents_count || 0) + (a.class_incidents_count || 0);
-          bValue = (b.individual_incidents_count || 0) + (b.class_incidents_count || 0);
-          break;
-        case 'date':
-          aValue = new Date(a.created_at || 0);
-          bValue = new Date(b.created_at || 0);
-          break;
-        case 'name':
-        default:
-          aValue = `${a.first_name} ${a.last_name}`.toLowerCase();
-          bValue = `${b.first_name} ${b.last_name}`.toLowerCase();
-          break;
-      }
-      
-      if (filters.sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
+    try {
+      const data = await classAPI.getClasses();
+      if (data.success) {
+        setClasses(data.data.classes || []);
       } else {
-        return aValue < bValue ? 1 : -1;
+        console.error('Failed to load classes:', data.message);
       }
-    });
-    
-    setFilteredTeachers(result);
-  }, [filters]);
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+    } finally {
+      setLoading(prev => ({ ...prev, classes: false }));
+    }
+  }, []);
   
-  // Fetch teachers
-  const fetchTeachers = useCallback(async (showLoading = true) => {
+  // Fetch students
+  const fetchStudents = useCallback(async (showLoading = true) => {
     if (showLoading) {
       setLoading(prev => ({ ...prev, initial: true }));
     }
     setError(null);
     
     try {
-      const data = await teacherAPI.getTeachers();
+      // Always fetch all students - filtering will be done client-side
+      const data = await studentAPI.getStudents();
       if (data.success) {
-        setTeachers(data.data || []);
-        applyFilters(data.data || []);
+        const studentsList = data.data.students || [];
+        setStudents(studentsList);
         if (showLoading) {
-          addToast('Teachers loaded successfully', 'success');
+          addToast('Students loaded successfully', 'success');
         }
       } else {
-        setError(data.message || 'Failed to load teachers');
-        addToast(data.message || 'Failed to load teachers', 'error');
+        setError(data.message || 'Failed to load students');
+        addToast(data.message || 'Failed to load students', 'error');
       }
     } catch (error) {
-      console.error('Error fetching teachers:', error);
+      console.error('Error fetching students:', error);
       setError('Network error. Please try again.');
       addToast('Network error. Please try again.', 'error');
     } finally {
@@ -200,16 +243,12 @@ const Teachers = () => {
         refresh: false 
       }));
     }
-  }, [applyFilters, addToast]);
+  }, [addToast]);
   
   // Handle filter changes
   const handleFilterChange = useCallback((key, value) => {
-    setFilters(prev => {
-      const newFilters = { ...prev, [key]: value };
-      applyFilters(teachers);
-      return newFilters;
-    });
-  }, [applyFilters, teachers]);
+    setFilters(prev => ({ ...prev, [key]: value }));
+  }, []);
   
   // Handle search with debounce
   const handleSearch = useCallback((value) => {
@@ -219,69 +258,49 @@ const Teachers = () => {
   // Refresh data
   const handleRefresh = useCallback(() => {
     setLoading(prev => ({ ...prev, refresh: true }));
-    fetchTeachers(false);
-  }, [fetchTeachers]);
+    fetchStudents(false);
+  }, [fetchStudents]);
   
-  // Open teacher modal
-  const openTeacherModal = useCallback((teacher, view = 'details') => {
-    setSelectedTeacher(teacher);
+  // Open student modal
+  const openStudentModal = useCallback((student, view = 'details') => {
+    setSelectedStudent(student);
     setModalView(view);
     setIsModalOpen(true);
   }, []);
   
-  // Close teacher modal
-  const closeTeacherModal = useCallback(() => {
+  // Close student modal
+  const closeStudentModal = useCallback(() => {
     setIsModalOpen(false);
-    setSelectedTeacher(null);
+    setSelectedStudent(null);
     setModalView('details');
   }, []);
   
-  // Handle teacher update
-  const handleTeacherUpdate = useCallback((updatedTeacher) => {
-    setTeachers(prev => 
-      prev.map(teacher => 
-        teacher.user_id === updatedTeacher.user_id 
-          ? { ...teacher, ...updatedTeacher }
-          : teacher
+  // Handle student update
+  const handleStudentUpdate = useCallback((updatedStudent) => {
+    setStudents(prev => 
+      prev.map(student => 
+        student.student_id === updatedStudent.student_id 
+          ? { ...student, ...updatedStudent }
+          : student
       )
     );
-    applyFilters(teachers.map(teacher => 
-      teacher.user_id === updatedTeacher.user_id 
-        ? { ...teacher, ...updatedTeacher }
-        : teacher
-    ));
-    addToast('Teacher updated successfully', 'success');
-  }, [teachers, applyFilters, addToast]);
+    addToast('Student updated successfully', 'success');
+  }, [addToast]);
   
-  // Handle teacher delete
-  const handleTeacherDelete = useCallback((teacherId) => {
-    setTeachers(prev => prev.filter(teacher => teacher.user_id !== teacherId));
-    applyFilters(teachers.filter(teacher => teacher.user_id !== teacherId));
-    addToast('Teacher deleted successfully', 'success');
-  }, [teachers, applyFilters, addToast]);
+  // Handle student delete
+  const handleStudentDelete = useCallback((studentId) => {
+    setStudents(prev => prev.filter(student => student.student_id !== studentId));
+    addToast('Student deleted successfully', 'success');
+  }, [addToast]);
   
   // Calculate statistics
-  const calculateStats = () => {
-    const totalTeachers = teachers.length;
-    const teachersWithClass = teachers.filter(t => t.class_id).length;
-    const teachersWithoutClass = totalTeachers - teachersWithClass;
-    const totalIncidents = teachers.reduce((sum, teacher) => 
-      sum + (teacher.individual_incidents_count || 0) + (teacher.class_incidents_count || 0), 0);
-    
-    return { totalTeachers, teachersWithClass, teachersWithoutClass, totalIncidents };
-  };
+  const stats = calculateStudentStats(students);
   
   // Initial fetch
   useEffect(() => {
-    fetchTeachers();
-  }, [fetchTeachers]);
-  
-  // Apply filters when filters change
-  useEffect(() => {
-    applyFilters(teachers);
-  }, [applyFilters, teachers]);
-  
-  const stats = calculateStats();
+    fetchStudents();
+    fetchClasses();
+  }, [fetchStudents, fetchClasses]);
   
   // CSS styles
   const styles = `
@@ -383,15 +402,6 @@ const Teachers = () => {
       background: rgba(15, 23, 42, 0.5);
       box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
     }
-    
-    .teacher-row {
-      transition: all 0.2s ease;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-    }
-    
-    .teacher-row:hover {
-      background: rgba(30, 41, 59, 0.4) !important;
-    }
   `;
 
   return (
@@ -408,19 +418,19 @@ const Teachers = () => {
         />
       ))}
       
-      {/* Teacher Modal */}
-      {isModalOpen && selectedTeacher && (
-        <TeacherModal
-          teacher={selectedTeacher}
+      {/* Student Modal */}
+      {isModalOpen && selectedStudent && (
+        <StudentModal
+          studentData={selectedStudent}
           isOpen={isModalOpen}
-          onClose={closeTeacherModal}
-          onUpdate={handleTeacherUpdate}
-          onDelete={handleTeacherDelete}
+          onClose={closeStudentModal}
+          onUpdate={handleStudentUpdate}
+          onDelete={handleStudentDelete}
           view={modalView}
         />
       )}
       
-      <div className="teachers-page-content" style={{ animation: 'fadeIn 0.3s ease' }}>
+      <div className="students-page-content" style={{ animation: 'fadeIn 0.3s ease' }}>
         {/* Header */}
         <div style={{
           marginBottom: '2rem',
@@ -432,14 +442,14 @@ const Teachers = () => {
             color: '#f8fafc',
             marginBottom: '0.5rem'
           }}>
-            Teacher Management
+            Students Management
           </h1>
           <p style={{
             fontSize: 'clamp(0.9rem, 2vw, 1rem)',
             color: '#94a3b8',
             marginBottom: '1.5rem'
           }}>
-            Manage all teachers in your school, view their incidents, and perform administrative actions
+            Manage all students in your school, view incidents, and perform administrative actions
           </p>
           
           {/* Search and Actions Bar */}
@@ -449,7 +459,7 @@ const Teachers = () => {
             gap: '1rem',
             marginBottom: '1.5rem'
           }}>
-
+            
             
             {/* Action Buttons */}
             <div style={{
@@ -465,7 +475,7 @@ const Teachers = () => {
                 color: '#94a3b8',
                 fontSize: '0.9rem'
               }}>
-                <span>Showing {filteredTeachers.length} of {teachers.length} teachers</span>
+                <span>Showing {filteredStudents.length} of {students.length} students</span>
                 {loading.refresh && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
@@ -517,8 +527,8 @@ const Teachers = () => {
         
         {/* Statistics Cards */}
         <div className="stats-grid">
-          {/* Total Teachers Card */}
-          <div className="stat-card" onClick={() => handleFilterChange('showWithClass', 'all')}>
+          {/* Total Students Card */}
+          <div className="stat-card" onClick={() => handleFilterChange('classFilter', 'all')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
                 background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.2) 100%)',
@@ -531,8 +541,8 @@ const Teachers = () => {
                 <Users size={24} color="#8b5cf6" />
               </div>
               <div>
-                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Total Teachers</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalTeachers}</div>
+                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Total Students</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalStudents}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
@@ -540,31 +550,35 @@ const Teachers = () => {
             </div>
           </div>
           
-          {/* Teachers with Class Card */}
-          <div className="stat-card" onClick={() => handleFilterChange('showWithClass', 'with')}>
+          {/* Students with Incidents Card */}
+          <div className="stat-card" onClick={() => handleFilterChange('incidentFilter', 'with_incidents')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
-                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.2) 100%)',
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.2) 100%)',
                 borderRadius: '10px',
                 padding: '0.75rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <UserCheck size={24} color="#22c55e" />
+                <AlertCircle size={24} color="#ef4444" />
               </div>
               <div>
-                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>With Class</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.teachersWithClass}</div>
+                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>With Incidents</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.studentsWithIncidents}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-              {stats.teachersWithClass > 0 ? `${Math.round((stats.teachersWithClass / stats.totalTeachers) * 100)}% of total` : 'Click to view'}
+              {stats.studentsWithIncidents > 0 ? `${Math.round((stats.studentsWithIncidents / stats.totalStudents) * 100)}% of total` : 'Click to view'}
             </div>
           </div>
           
-          {/* Teachers without Class Card */}
-          <div className="stat-card" onClick={() => handleFilterChange('showWithClass', 'without')}>
+          {/* Students without Class Card */}
+          <div className="stat-card" onClick={() => {
+            // Find students without class
+            const withoutClassStudents = students.filter(s => !s.class_id);
+            setFilteredStudents(withoutClassStudents);
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
                 background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.2) 100%)',
@@ -578,44 +592,39 @@ const Teachers = () => {
               </div>
               <div>
                 <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Without Class</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.teachersWithoutClass}</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.studentsWithoutClass}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-              {stats.teachersWithoutClass > 0 ? `${Math.round((stats.teachersWithoutClass / stats.totalTeachers) * 100)}% of total` : 'Click to view'}
+              {stats.studentsWithoutClass > 0 ? `${Math.round((stats.studentsWithoutClass / stats.totalStudents) * 100)}% of total` : 'Click to view'}
             </div>
           </div>
           
-          {/* Total Incidents Card */}
-          <div className="stat-card" style={{
-            background: 'rgba(30, 41, 59, 0.6)',
-            borderRadius: '12px',
-            padding: '1.25rem',
-            border: '1px solid rgba(148, 163, 184, 0.1)'
-          }}>
+          {/* Students with Active Punishments Card */}
+          <div className="stat-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
-                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.2) 100%)',
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.2) 100%)',
                 borderRadius: '10px',
                 padding: '0.75rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <AlertCircle size={24} color="#ef4444" />
+                <ShieldAlert size={24} color="#3b82f6" />
               </div>
               <div>
-                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Total Incidents</div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalIncidents}</div>
+                <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Active Punishments</div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.studentsWithActivePunishments}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-              Reported by all teachers
+              Currently serving punishments
             </div>
           </div>
         </div>
         
-        {/* Teachers Table */}
+        {/* Students Table */}
         <div style={{
           background: 'rgba(30, 41, 59, 0.6)',
           borderRadius: '12px',
@@ -623,35 +632,78 @@ const Teachers = () => {
           overflow: 'hidden',
           animation: 'fadeIn 0.5s ease-out'
         }}>
+
           {/* Filters above the table */}
           <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid rgba(148, 163, 184, 0.08)' }}>
+            {/* Filter Toggle */}
             <button
               onClick={() => setExpandedFilters(!expandedFilters)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '12px', padding: '0.875rem 1.25rem', color: '#cbd5e1', cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s ease', backdropFilter: 'blur(10px)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)'; e.currentTarget.style.color = '#f8fafc'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(30, 41, 59, 0.4)'; e.currentTarget.style.color = '#cbd5e1'; }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'rgba(30, 41, 59, 0.4)',
+                border: '1px solid rgba(148, 163, 184, 0.2)',
+                borderRadius: '12px',
+                padding: '0.875rem 1.25rem',
+                color: '#cbd5e1',
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                transition: 'all 0.2s ease',
+                backdropFilter: 'blur(10px)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)';
+                e.currentTarget.style.color = '#f8fafc';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(30, 41, 59, 0.4)';
+                e.currentTarget.style.color = '#cbd5e1';
+              }}
             >
               <Filter size={16} />
               {expandedFilters ? 'Hide Filters' : 'Show Filters'}
               {expandedFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
+
             {expandedFilters && (
-              <div style={{ marginTop: '1rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px', padding: '1.25rem', border: '1px solid rgba(148, 163, 184, 0.1)', animation: 'fadeIn 0.3s ease' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{
+                marginTop: '1rem',
+                background: 'rgba(15, 23, 42, 0.4)',
+                borderRadius: '12px',
+                padding: '1.25rem',
+                border: '1px solid rgba(148, 163, 184, 0.1)',
+                animation: 'fadeIn 0.3s ease',
+              }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1rem'
+                }}>
                   <div>
-                    <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>Class Assignment</label>
-                    <select value={filters.showWithClass} onChange={(e) => handleFilterChange('showWithClass', e.target.value)} style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '8px', color: '#f8fafc', fontSize: '0.9rem', cursor: 'pointer' }}>
-                      <option value="all">All Teachers</option>
-                      <option value="with">With Class Assignment</option>
-                      <option value="without">Without Class Assignment</option>
+                    <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>Class Filter</label>
+                    <select value={filters.classFilter} onChange={(e) => handleFilterChange('classFilter', e.target.value)} style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '8px', color: '#f8fafc', fontSize: '0.9rem', cursor: 'pointer' }}>
+                      <option value="all">All Classes</option>
+                      {loading.classes ? (<option disabled>Loading classes...</option>) : classes.length === 0 ? (<option disabled>No classes available</option>) : (classes.map((classItem) => (<option key={classItem.class_id} value={classItem.class_id}>{classItem.class_name} ({classItem.student_count || 0} students)</option>)))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>Incident Status</label>
+                    <select value={filters.incidentFilter} onChange={(e) => handleFilterChange('incidentFilter', e.target.value)} style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '8px', color: '#f8fafc', fontSize: '0.9rem', cursor: 'pointer' }}>
+                      <option value="all">All Students</option>
+                      <option value="with_incidents">With Incidents</option>
+                      <option value="without_incidents">Without Incidents</option>
                     </select>
                   </div>
                   <div>
                     <label style={{ display: 'block', color: '#cbd5e1', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '500' }}>Sort By</label>
                     <select value={filters.sortBy} onChange={(e) => handleFilterChange('sortBy', e.target.value)} style={{ width: '100%', padding: '0.75rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '8px', color: '#f8fafc', fontSize: '0.9rem', cursor: 'pointer' }}>
                       <option value="name">Name (A-Z)</option>
-                      <option value="incidents">Total Incidents</option>
-                      <option value="date">Join Date</option>
+                      <option value="admission">Admission Number</option>
+                      <option value="class">Class Name</option>
+                      <option value="incidents">Incident Count</option>
+                      <option value="date">Creation Date</option>
                     </select>
                   </div>
                   <div>
@@ -665,8 +717,9 @@ const Teachers = () => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
                   <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Active filters:</span>
                   {filters.search && (<span style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#c4b5fd', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}><Search size={10} />Search: "{filters.search}"</span>)}
-                  {filters.showWithClass !== 'all' && (<span style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}><Filter size={10} />{filters.showWithClass === 'with' ? 'With Class' : 'Without Class'}</span>)}
-                  <button onClick={() => setFilters({ search: '', showWithClass: 'all', sortBy: 'name', sortOrder: 'asc' })} style={{ background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '6px', padding: '0.25rem 0.75rem', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer' }}>Clear all</button>
+                  {filters.classFilter !== 'all' && (<span style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}><BookOpen size={10} />{(() => { const selectedClass = classes.find(c => c.class_id === filters.classFilter); return selectedClass ? selectedClass.class_name : 'Selected Class'; })()}</span>)}
+                  {filters.incidentFilter !== 'all' && (<span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertCircle size={10} />{filters.incidentFilter === 'with_incidents' ? 'With Incidents' : 'Without Incidents'}</span>)}
+                  <button onClick={() => { setFilters({ search: '', classFilter: 'all', incidentFilter: 'all', sortBy: 'name', sortOrder: 'asc' }); }} style={{ background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '6px', padding: '0.25rem 0.75rem', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer' }}>Clear all</button>
                 </div>
               </div>
             )}
@@ -693,7 +746,7 @@ const Teachers = () => {
                 margin: 0
               }}>
                 <Users size={20} />
-                Teachers List
+                Students List
               </h2>
               
               {/* Integrated Search Bar */}
@@ -707,14 +760,13 @@ const Teachers = () => {
                 }} />
                 <input
                   type="text"
-                  placeholder="Filter teachers..."
+                  placeholder="Filter students..."
                   value={filters.search}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="search-input-integrated"
                 />
               </div>
             </div>
-
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -725,7 +777,7 @@ const Teachers = () => {
               {loading.initial ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
-                  Loading teachers...
+                  Loading students...
                 </span>
               ) : error ? (
                 <span style={{ color: '#fca5a5' }}>
@@ -734,7 +786,7 @@ const Teachers = () => {
                 </span>
               ) : (
                 <span>
-                  {filteredTeachers.length} teacher{filteredTeachers.length !== 1 ? 's' : ''} found
+                  {filteredStudents.length} student{filteredStudents.length !== 1 ? 's' : ''} found
                 </span>
               )}
             </div>
@@ -745,14 +797,14 @@ const Teachers = () => {
             {loading.initial ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
                 <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-                <p>Loading teachers...</p>
+                <p>Loading students...</p>
               </div>
             ) : error ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
                 <AlertCircle size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
                 <p style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#fca5a5' }}>{error}</p>
                 <button
-                  onClick={() => fetchTeachers()}
+                  onClick={() => fetchStudents()}
                   style={{
                     background: 'rgba(30, 41, 59, 0.8)',
                     border: '1px solid rgba(148, 163, 184, 0.2)',
@@ -778,21 +830,22 @@ const Teachers = () => {
                   Try Again
                 </button>
               </div>
-            ) : filteredTeachers.length === 0 ? (
+            ) : filteredStudents.length === 0 ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
                 <Users size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                <p style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>No teachers found</p>
+                <p style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>No students found</p>
                 <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>
-                  {filters.search || filters.showWithClass !== 'all' 
+                  {filters.search || filters.classFilter !== 'all' || filters.incidentFilter !== 'all'
                     ? 'Try changing your filters or search query' 
-                    : 'No teachers have been added yet'}
+                    : 'No students have been added to your school yet'}
                 </p>
-                {(filters.search || filters.showWithClass !== 'all') && (
+                {(filters.search || filters.classFilter !== 'all' || filters.incidentFilter !== 'all') && (
                   <button
                     onClick={() => {
                       setFilters({
                         search: '',
-                        showWithClass: 'all',
+                        classFilter: 'all',
+                        incidentFilter: 'all',
                         sortBy: 'name',
                         sortOrder: 'asc'
                       });
@@ -823,7 +876,7 @@ const Teachers = () => {
               <table style={{
                 width: '100%',
                 borderCollapse: 'collapse',
-                minWidth: '800px'
+                minWidth: '1000px'
               }}>
                 <thead>
                   <tr style={{
@@ -837,7 +890,7 @@ const Teachers = () => {
                       fontWeight: '600',
                       fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
-                    }}>Teacher</th>
+                    }}>Student</th>
                     <th style={{
                       padding: '1rem',
                       textAlign: 'left',
@@ -845,7 +898,7 @@ const Teachers = () => {
                       fontWeight: '600',
                       fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
-                    }}>Email</th>
+                    }}>Admission</th>
                     <th style={{
                       padding: '1rem',
                       textAlign: 'left',
@@ -853,13 +906,13 @@ const Teachers = () => {
                       fontWeight: '600',
                       fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
-                    }}>Class Assignment</th>
+                    }}>Class</th>
                     <th style={{
                       padding: '1rem',
                       textAlign: 'left',
                       color: '#cbd5e1',
                       fontWeight: '600',
-                      fontSize: '0.9restore', 
+                      fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
                     }}>Incidents</th>
                     <th style={{
@@ -869,7 +922,7 @@ const Teachers = () => {
                       fontWeight: '600',
                       fontSize: '0.9rem',
                       whiteSpace: 'nowrap'
-                    }}>Joined</th>
+                    }}>Created</th>
                     <th style={{
                       padding: '1rem',
                       textAlign: 'left',
@@ -881,87 +934,107 @@ const Teachers = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTeachers.map((teacher, index) => (
+                  {filteredStudents.map((student, index) => (
                     <tr 
-                      key={teacher.user_id} 
+                      key={student.student_id} 
                       className="table-row"
                       style={{
                         borderBottom: '1px solid rgba(148, 163, 184, 0.05)',
                         cursor: 'pointer',
-                        background: index % 2 === 0 ? 'transparent' : 'rgba(15, 23, 42, 0.15)' // Zebra striping
+                        background: index % 2 === 0 ? 'transparent' : 'rgba(15, 23, 42, 0.15)'
                       }}
-                      onClick={() => openTeacherModal(teacher, 'details')}
+                      onClick={() => openStudentModal(student)}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = 'rgba(15, 23, 42, 0.3)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = index % 2 === 0 ? 'transparent' : 'rgba(15, 23, 42, 0.15)';
+                        e.currentTarget.style.background = 'transparent';
                       }}
                     >
                       <td style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <div style={{
-                            width: '36px',
-                            height: '36px',
-                            background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                            borderRadius: '8px',
+                            width: '40px',
+                            height: '40px',
+                            background: student.total_incidents > 0 
+                              ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
+                              : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                            borderRadius: '10px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: 'white',
                             fontWeight: 'bold',
-                            fontSize: '14px',
+                            fontSize: '16px',
                             flexShrink: 0
                           }}>
-                            {teacher.first_name?.[0]}{teacher.last_name?.[0]}
+                            {getInitials(student.first_name, student.last_name)}
                           </div>
                           <div>
                             <div style={{ 
                               color: '#f1f5f9', 
                               fontWeight: '600',
-                              marginBottom: '2px'
+                              marginBottom: '2px',
+                              fontSize: '1.05rem'
                             }}>
-                              {teacher.first_name} {teacher.last_name}
+                              {student.first_name} {student.last_name}
                             </div>
                             <div style={{ 
                               fontSize: '0.8rem', 
                               color: '#94a3b8'
                             }}>
-                              ID: {teacher.user_id?.substring(0, 8)}...
+                              ID: {student.student_id?.substring(0, 8)}...
                             </div>
                           </div>
                         </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Mail size={14} color="#94a3b8" />
-                          <span style={{ color: '#e2e8f0' }}>{teacher.email}</span>
+                          <GraduationCap size={16} color="#94a3b8" />
+                          <span style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: '500' }}>
+                            {student.admission_number}
+                          </span>
                         </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
-                        {teacher.class_id ? (
-                          <div style={{ 
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            background: 'rgba(34, 197, 94, 0.1)',
-                            color: '#86efac',
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: '8px',
-                            fontSize: '0.85rem',
-                            border: '1px solid rgba(34, 197, 94, 0.2)'
-                          }}>
-                            <BookOpen size={14} />
-                            {teacher.class_name}
+                        {student.class_name ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{
+                              width: '36px',
+                              height: '36px',
+                              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontWeight: 'bold',
+                              fontSize: '14px',
+                              flexShrink: 0
+                            }}>
+                              {student.class_name?.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ color: '#f1f5f9', fontWeight: '500', marginBottom: '2px' }}>
+                                {student.class_name}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                Class
+                              </div>
+                            </div>
                           </div>
                         ) : (
-                          <span style={{ 
+                          <div style={{ 
                             color: '#f59e0b', 
                             fontStyle: 'italic',
-                            fontSize: '0.9rem'
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
                           }}>
-                            No class assigned
-                          </span>
+                            <UserX size={16} />
+                            Not assigned to class
+                          </div>
                         )}
                       </td>
                       <td style={{ padding: '1rem' }}>
@@ -969,13 +1042,13 @@ const Teachers = () => {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <AlertCircle size={12} color="#94a3b8" />
                             <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>
-                              Individual: <strong>{teacher.individual_incidents_count || 0}</strong>
+                              Total: <strong>{student.total_incidents || 0}</strong>
                             </span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Users size={12} color="#94a3b8" />
+                            <ShieldAlert size={12} color="#94a3b8" />
                             <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>
-                              Class: <strong>{teacher.class_incidents_count || 0}</strong>
+                              Active Punishments: <strong>{student.active_punishments || 0}</strong>
                             </span>
                           </div>
                         </div>
@@ -984,7 +1057,7 @@ const Teachers = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <Calendar size={14} color="#94a3b8" />
                           <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>
-                            {formatDate(teacher.created_at)}
+                            {formatDate(student.created_at)}
                           </span>
                         </div>
                       </td>
@@ -993,7 +1066,7 @@ const Teachers = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              openTeacherModal(teacher, 'details');
+                              openStudentModal(student, 'details');
                             }}
                             style={{
                               background: 'rgba(30, 41, 59, 0.8)',
@@ -1024,7 +1097,7 @@ const Teachers = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              openTeacherModal(teacher, 'edit');
+                              openStudentModal(student, 'edit');
                             }}
                             style={{
                               background: 'rgba(59, 130, 246, 0.1)',
@@ -1048,7 +1121,7 @@ const Teachers = () => {
                               e.currentTarget.style.color = '#93c5fd';
                             }}
                           >
-                            <Eye size={12} />
+                            <Edit2 size={12} />
                             Edit
                           </button>
                         </div>
@@ -1061,7 +1134,7 @@ const Teachers = () => {
           </div>
           
           {/* Table Footer */}
-          {!loading.initial && !error && filteredTeachers.length > 0 && (
+          {!loading.initial && !error && filteredStudents.length > 0 && (
             <div style={{
               padding: '1rem 1.5rem',
               borderTop: '1px solid rgba(148, 163, 184, 0.1)',
@@ -1073,13 +1146,15 @@ const Teachers = () => {
               fontSize: '0.85rem'
             }}>
               <div>
-                Showing {filteredTeachers.length} of {teachers.length} teachers
+                Showing {filteredStudents.length} of {students.length} students
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span>Sorted by:</span>
                 <span style={{ color: '#cbd5e1', fontWeight: '500' }}>
                   {filters.sortBy === 'name' ? 'Name' : 
-                   filters.sortBy === 'incidents' ? 'Total Incidents' : 'Join Date'} 
+                   filters.sortBy === 'admission' ? 'Admission Number' : 
+                   filters.sortBy === 'class' ? 'Class Name' : 
+                   filters.sortBy === 'incidents' ? 'Incident Count' : 'Creation Date'} 
                   ({filters.sortOrder === 'asc' ? 'A-Z' : 'Z-A'})
                 </span>
               </div>
@@ -1088,7 +1163,7 @@ const Teachers = () => {
         </div>
         
         {/* Empty State Instructions */}
-        {!loading.initial && teachers.length === 0 && !error && (
+        {!loading.initial && students.length === 0 && !error && (
           <div style={{
             marginTop: '2rem',
             padding: '2rem',
@@ -1100,10 +1175,10 @@ const Teachers = () => {
           }}>
             <Users size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
             <h3 style={{ fontSize: '1.25rem', color: '#cbd5e1', marginBottom: '0.5rem' }}>
-              No Teachers Yet
+              No Students Yet
             </h3>
             <p style={{ marginBottom: '1rem', maxWidth: '500px', margin: '0 auto 1rem' }}>
-              You haven't added any teachers to your school yet. Teachers can be created from the Dashboard page.
+              You haven't added any students to your school yet. Students can be created from the Dashboard page or by teachers.
             </p>
             <button
               onClick={() => window.location.href = '/admin/dashboard'}
@@ -1130,7 +1205,7 @@ const Teachers = () => {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <Users size={16} />
+              <Home size={16} />
               Go to Dashboard
             </button>
           </div>
@@ -1140,4 +1215,4 @@ const Teachers = () => {
   );
 };
 
-export default Teachers;
+export default Students;

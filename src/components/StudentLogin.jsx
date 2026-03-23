@@ -1,566 +1,422 @@
-// components/student/StudentLogin.jsx
-
-/**
- * Student Login Component
- * 
- * This component provides the login interface for students to access their dashboard.
- * It follows the EXACT SAME design pattern and color scheme as SchoolAdminLogin.
- * 
- * Features:
- * - Email and password validation
- * - Password visibility toggle
- * - Error and success messaging
- * - Automatic redirection to student dashboard on successful login
- * - Secure token storage in localStorage and sessionStorage
- * - Responsive design with gradient background
- * 
- * Dependencies:
- * - React hooks (useState, useNavigate)
- * - react-router-dom for navigation
- * - lucide-react for icons
- * 
- * API Endpoint: POST /student/login
- * 
- * @returns {JSX.Element} Student login form component
- */
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-  Users, 
   ArrowLeft, 
-  Eye, 
-  EyeOff,
-  Lock,
-  Mail,
+  User,
+  BookOpen,
+  Hash,
   AlertCircle,
   CheckCircle,
-  UserPlus,
-  GraduationCap
+  GraduationCap,
+  Key
 } from 'lucide-react';
 
-
-// api
 const api = process.env.REACT_APP_API_URL;
 
 const StudentLogin = () => {
-  // Initialize navigation hook for programmatic routing
   const navigate = useNavigate();
-  
-  // State for form data (email and password)
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    first_name: '',
+    last_name: '',
+    admission_number: ''
   });
-  
-  // State to toggle password visibility
-  const [showPassword, setShowPassword] = useState(false);
-  
-  // State to handle loading during API request
   const [loading, setLoading] = useState(false);
-  
-  // State to display error messages
   const [error, setError] = useState('');
-  
-  // State to display success messages
   const [success, setSuccess] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  /**
-   * Handle input field changes
-   * Updates form state and clears any existing error messages
-   * 
-   * @param {Event} e - Change event from input field
-   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
-  /**
-   * Validate form inputs before submission
-   * Checks for empty fields and valid email format
-   * 
-   * @returns {boolean} True if validation passes, false otherwise
-   */
   const validateForm = () => {
-    // Check if both fields are filled
-    if (!formData.email || !formData.password) {
+    if (!formData.first_name || !formData.last_name || !formData.admission_number) {
       setError('Please fill in all fields');
       return false;
     }
 
-    // Validate email format using regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
+    const admissionNumberRegex = /^[0-9]{2,20}$/;
+    if (!admissionNumberRegex.test(formData.admission_number)) {
+      setError('Please enter a valid admission number (2-20 digits)');
       return false;
     }
 
     return true;
   };
 
-  /**
-   * Handle form submission
-   * Validates form, sends login request to API, and handles response
-   * 
-   * @param {Event} e - Form submission event
-   */
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission
-    
-    // Validate form before proceeding
+    e.preventDefault();
     if (!validateForm()) return;
     
-    // Set loading state and clear previous messages
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      // Send login request to student login endpoint
       const response = await fetch(`${api}/student/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
+          first_name: formData.first_name.trim(),
+          last_name: formData.last_name.trim(),
+          admission_number: formData.admission_number.trim()
         })
       });
 
-      // Parse response JSON
       const data = await response.json();
 
-      // Check if login was successful
       if (response.ok && data.success) {
-        // Display success message
-        setSuccess('Login successful! Redirecting to dashboard...');
+        setSuccess(`Welcome back, ${data.data.full_name}! Redirecting...`);
         
-        // Store authentication tokens and user data
         localStorage.setItem('access_token', data.data.access_token);
         localStorage.setItem('refresh_token', data.data.refresh_token);
-        localStorage.setItem('user', JSON.stringify(data.data));
+        localStorage.setItem('student_data', JSON.stringify(data.data));
         sessionStorage.setItem('access_token', data.data.access_token);
         
-        // Redirect to student dashboard after 2 seconds
+        localStorage.setItem('student_id', data.data.student_id);
+        localStorage.setItem('full_name', data.data.full_name);
+        localStorage.setItem('class_name', data.data.class_name || 'Not Assigned');
+        
         setTimeout(() => {
           navigate('/student/dashboard');
         }, 2000);
       } else {
-        // Display error message from server response
         setError(data.message || 'Login failed. Please check your credentials.');
       }
     } catch (err) {
-      // Handle network or unexpected errors
       console.error('Login error:', err);
-      setError('Network error. Please try again.');
+      setError('Unable to connect to server. Please try again.');
     } finally {
-      // Reset loading state regardless of success/failure
       setLoading(false);
     }
   };
 
-  // ==================== STYLE DEFINITIONS ====================
-  // EXACT SAME STYLES as SchoolAdminLogin - Only text content differs
+  const capitalizeName = (name) => {
+    return name
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
 
-  /** Main container styling with gradient background - SAME as SchoolAdminLogin */
+  const handleNameBlur = (e) => {
+    const { name, value } = e.target;
+    if (value.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: capitalizeName(value)
+      }));
+    }
+  };
+
+  // Theme Colors (Emerald for Student)
+  const colors = {
+    primary: '#10b981', // Emerald 500
+    primaryHover: '#059669', // Emerald 600
+    primaryLight: 'rgba(16, 185, 129, 0.1)',
+    background: 'linear-gradient(135deg, #0a0f1c 0%, #1a1744 50%, #0a0f1c 100%)',
+    cardBg: 'rgba(30, 41, 59, 0.4)',
+    border: 'rgba(148, 163, 184, 0.08)',
+    textPrimary: '#f8fafc',
+    textSecondary: '#cbd5e1',
+    textMuted: '#94a3b8',
+    inputBg: 'rgba(15, 23, 42, 0.6)',
+    inputBorder: 'rgba(148, 163, 184, 0.1)',
+    shadow: '0 20px 40px -10px rgba(0, 0, 0, 0.3)',
+    glow: '0 0 20px rgba(16, 185, 129, 0.3)'
+  };
+
   const containerStyle = {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #1e1b4b 0%, #2d2a6e 50%, #1e1b4b 100%)',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+    background: colors.background,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '1rem'
-  };
-
-  /** Login card styling with glassmorphism effect - SAME as SchoolAdminLogin */
-  const loginCardStyle = {
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '16px',
-    padding: '2.5rem',
-    width: '100%',
-    maxWidth: '420px',
-    backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(139, 92, 246, 0.2)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+    padding: '1rem',
     position: 'relative',
     overflow: 'hidden'
   };
 
-  /** Back button styling inside the form card - SAME as SchoolAdminLogin */
-  const formBackButtonStyle = {
-    position: 'absolute',
-    top: '1.25rem',
-    left: '1.25rem',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    color: '#c4b5fd',
-    textDecoration: 'none',
-    padding: '0.5rem',
-    borderRadius: '8px',
-    transition: 'all 0.3s ease',
-    background: 'rgba(255, 255, 255, 0.05)',
-    fontSize: '0.85rem',
-    fontWeight: '500',
-    zIndex: 10,
-    border: '1px solid rgba(139, 92, 246, 0.1)',
-    ':hover': {
-      background: 'rgba(255, 255, 255, 0.1)',
-      color: '#faf5ff',
-      transform: 'translateX(-2px)'
-    }
+  const cardStyle = {
+    background: colors.cardBg,
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderRadius: '24px',
+    border: `1px solid ${colors.border}`,
+    padding: '2.5rem',
+    width: '100%',
+    maxWidth: '450px',
+    boxShadow: colors.shadow,
+    position: 'relative',
+    zIndex: 1
   };
 
-  /** Header section styling for the login card - SAME as SchoolAdminLogin */
-  const loginCardHeaderStyle = {
-    textAlign: 'center',
-    marginBottom: '2rem',
-    marginTop: '0.5rem'
-  };
-
-  /** Logo container styling - SAME as SchoolAdminLogin */
-  const logoStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.75rem',
-    marginBottom: '1rem'
-  };
-
-  /** Logo icon styling - SAME as SchoolAdminLogin */
-  const logoIconStyle = {
-    width: '2.5rem',
-    height: '2.5rem',
-    color: '#8b5cf6'
-  };
-
-  /** Brand text styling with gradient - SAME as SchoolAdminLogin */
-  const brandTextStyle = {
-    fontSize: '2.25rem',
-    fontWeight: '800',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #f59e0b 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
-  };
-
-  /** Main title styling - SAME as SchoolAdminLogin */
-  const titleStyle = {
-    fontSize: '1.75rem',
-    fontWeight: '700',
-    marginBottom: '0.5rem',
-    color: '#faf5ff',
-    textAlign: 'center'
-  };
-
-  /** Subtitle styling - SAME as SchoolAdminLogin */
-  const subtitleStyle = {
-    fontSize: '1rem',
-    color: '#c4b5fd',
+  const headerStyle = {
     textAlign: 'center',
     marginBottom: '2rem'
   };
 
-  /** Form container styling - SAME as SchoolAdminLogin */
-  const formStyle = {
+  const logoContainerStyle = {
+    width: '4rem',
+    height: '4rem',
+    background: colors.primaryLight,
+    borderRadius: '16px',
     display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem'
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 1.5rem',
+    border: `1px solid rgba(16, 185, 129, 0.2)`
   };
 
-  /** Input group container styling - SAME as SchoolAdminLogin */
+  const titleStyle = {
+    fontSize: '2rem',
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: '0.5rem'
+  };
+
+  const subtitleStyle = {
+    color: colors.textSecondary,
+    fontSize: '1rem',
+    lineHeight: '1.5'
+  };
+
   const inputGroupStyle = {
-    position: 'relative'
+    position: 'relative',
+    marginBottom: '1.25rem'
   };
 
-  /** Input field styling - SAME as SchoolAdminLogin */
   const inputStyle = {
     width: '100%',
-    padding: '0.875rem 1rem 0.875rem 2.75rem',
-    background: 'rgba(255, 255, 255, 0.07)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '10px',
-    color: '#faf5ff',
-    fontSize: '0.95rem',
-    transition: 'all 0.3s ease',
+    padding: '1rem 1rem 1rem 3rem',
+    background: colors.inputBg,
+    border: `1px solid ${colors.inputBorder}`,
+    borderRadius: '12px',
+    color: colors.textPrimary,
+    fontSize: '1rem',
     outline: 'none',
-    ':focus': {
-      borderColor: '#8b5cf6',
-      boxShadow: '0 0 0 2px rgba(139, 92, 246, 0.2)'
-    }
+    transition: 'all 0.3s ease',
+    boxSizing: 'border-box'
   };
 
-  /** Input icon styling - SAME as SchoolAdminLogin */
   const inputIconStyle = {
     position: 'absolute',
-    left: '0.875rem',
+    left: '1rem',
     top: '50%',
     transform: 'translateY(-50%)',
-    color: '#c4b5fd',
-    width: '1.25rem',
-    height: '1.25rem'
+    color: colors.textMuted,
+    pointerEvents: 'none'
   };
 
-  /** Password toggle button styling - SAME as SchoolAdminLogin */
-  const passwordToggleStyle = {
-    position: 'absolute',
-    right: '0.875rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    color: '#c4b5fd',
-    cursor: 'pointer',
-    padding: '0.25rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'color 0.2s ease',
-    ':hover': {
-      color: '#faf5ff'
-    }
-  };
-
-  /** Submit button styling - SAME as SchoolAdminLogin */
   const buttonStyle = {
     width: '100%',
-    padding: '0.875rem 1.25rem',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+    padding: '1rem',
+    background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryHover})`,
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: '12px',
     color: 'white',
-    fontSize: '0.95rem',
+    fontSize: '1rem',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
+    marginTop: '1rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.5rem',
-    marginTop: '0.5rem',
-    ':hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 10px 20px rgba(139, 92, 246, 0.3)'
-    },
-    ':disabled': {
-      opacity: 0.6,
-      cursor: 'not-allowed',
-      transform: 'none'
-    }
+    boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)'
   };
 
-  /** Error message styling - SAME as SchoolAdminLogin */
-  const errorStyle = {
-    background: 'rgba(239, 68, 68, 0.1)',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-    color: '#fecaca',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.5rem',
-    marginBottom: '1rem'
-  };
-
-  /** Success message styling - SAME as SchoolAdminLogin */
-  const successStyle = {
-    background: 'rgba(34, 197, 94, 0.1)',
-    border: '1px solid rgba(34, 197, 94, 0.3)',
-    color: '#bbf7d0',
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.5rem',
-    marginBottom: '1rem'
-  };
-
-  /** Footer section styling - SAME as SchoolAdminLogin */
-  const footerStyle = {
-    marginTop: '1.5rem',
-    textAlign: 'center',
-    color: '#c4b5fd',
-    fontSize: '0.85rem'
-  };
-
-  /** Signup section styling - SAME as SchoolAdminLogin */
-  const signupSectionStyle = {
-    marginTop: '1.5rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid rgba(139, 92, 246, 0.1)',
-    textAlign: 'center',
-    fontSize: '0.9rem',
-    color: '#c4b5fd'
-  };
-
-  /** Signup link styling - SAME as SchoolAdminLogin */
-  const signupLinkStyle = {
-    color: '#8b5cf6',
+  const backButtonStyle = {
+    position: 'absolute',
+    top: '1.5rem',
+    left: '1.5rem',
+    color: colors.textMuted,
     textDecoration: 'none',
-    fontWeight: '600',
-    display: 'inline-flex',
+    display: 'flex',
     alignItems: 'center',
-    gap: '0.4rem',
-    marginTop: '0.5rem',
-    padding: '0.5rem 1rem',
-    borderRadius: '8px',
-    transition: 'all 0.3s ease',
-    background: 'rgba(139, 92, 246, 0.1)',
-    ':hover': {
-      background: 'rgba(139, 92, 246, 0.2)',
-      color: '#faf5ff',
-      transform: 'translateY(-2px)'
-    }
+    gap: '0.5rem',
+    fontSize: '0.9rem',
+    transition: 'color 0.3s ease',
+    zIndex: 10
   };
 
-  // ==================== RENDER COMPONENT ====================
   return (
     <div style={containerStyle}>
-      <div style={loginCardStyle}>
-        {/* Back button to return to role selection */}
-        <Link 
-          to="/role"
-          style={formBackButtonStyle}
-          title="Go back to role selection"
-        >
-          <ArrowLeft size={16} />
-        </Link>
+      <Link 
+        to="/role" 
+        style={backButtonStyle}
+        onMouseEnter={(e) => e.target.style.color = colors.textPrimary}
+        onMouseLeave={(e) => e.target.style.color = colors.textMuted}
+      >
+        <ArrowLeft size={18} />
+        Back
+      </Link>
 
-        {/* Login card header with logo and title */}
-        <div style={loginCardHeaderStyle}>
-          <div style={logoStyle}>
-            <GraduationCap style={logoIconStyle} />
-            <span style={brandTextStyle}>Wazi</span>
+      <div style={cardStyle}>
+        {/* Top Border Gradient */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: `linear-gradient(90deg, ${colors.primary}, #34d399)`,
+          borderRadius: '24px 24px 0 0',
+          opacity: 0.8
+        }} />
+
+        <div style={headerStyle}>
+          <div style={logoContainerStyle}>
+            <GraduationCap size={32} color={colors.primary} />
           </div>
-          <h1 style={titleStyle}>Student Login</h1>
-          <p style={subtitleStyle}>
-            Access your student portal and track your progress
-          </p>
+          <h1 style={titleStyle}>Student Portal</h1>
+          <p style={subtitleStyle}>Enter your details to access your portal</p>
         </div>
 
-        {/* Error message display */}
         {error && (
-          <div style={errorStyle}>
-            <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <span>{error}</span>
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            borderRadius: '12px',
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            color: '#fecaca'
+          }}>
+            <AlertCircle size={20} />
+            <span style={{ fontSize: '0.9rem' }}>{error}</span>
           </div>
         )}
 
-        {/* Success message display */}
         {success && (
-          <div style={successStyle}>
-            <CheckCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <span>{success}</span>
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            borderRadius: '12px',
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            color: '#a7f3d0'
+          }}>
+            <CheckCircle size={20} />
+            <span style={{ fontSize: '0.9rem' }}>{success}</span>
           </div>
         )}
 
-        {/* Login form */}
-        <form onSubmit={handleSubmit} style={formStyle}>
-          {/* Email input field */}
+        <form onSubmit={handleSubmit}>
           <div style={inputGroupStyle}>
-            <Mail style={inputIconStyle} />
+            <User size={20} style={inputIconStyle} />
             <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
+              type="text"
+              name="first_name"
+              value={formData.first_name}
               onChange={handleChange}
+              onBlur={(e) => {
+                handleNameBlur(e);
+                e.target.style.borderColor = colors.inputBorder;
+              }}
+              placeholder="First Name"
               style={inputStyle}
-              disabled={loading}
               required
+              onFocus={(e) => e.target.style.borderColor = colors.primary}
             />
           </div>
 
-          {/* Password input field with visibility toggle */}
           <div style={inputGroupStyle}>
-            <Lock style={inputIconStyle} />
+            <User size={20} style={inputIconStyle} />
             <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
+              type="text"
+              name="last_name"
+              value={formData.last_name}
               onChange={handleChange}
+              onBlur={(e) => {
+                handleNameBlur(e);
+                e.target.style.borderColor = colors.inputBorder;
+              }}
+              placeholder="Last Name"
               style={inputStyle}
-              disabled={loading}
               required
+              onFocus={(e) => e.target.style.borderColor = colors.primary}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={passwordToggleStyle}
-              disabled={loading}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
           </div>
 
-          {/* Submit button */}
-          <button
-            type="submit"
-            style={buttonStyle}
-            disabled={loading}
+          <div style={inputGroupStyle}>
+            <Hash size={20} style={inputIconStyle} />
+            <input
+              type="text"
+              name="admission_number"
+              value={formData.admission_number}
+              onChange={handleChange}
+              placeholder="Admission Number"
+              style={inputStyle}
+              required
+              onFocus={(e) => e.target.style.borderColor = colors.primary}
+              onBlur={(e) => e.target.style.borderColor = colors.inputBorder}
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '1rem' }}>
+            <input 
+              type="checkbox" 
+              id="terms" 
+              checked={acceptedTerms} 
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              style={{ marginTop: '0.25rem', accentColor: colors.primary, cursor: 'pointer', width: '16px', height: '16px' }}
+            />
+            <label htmlFor="terms" style={{ color: colors.textSecondary, fontSize: '0.9rem', lineHeight: '1.5', cursor: 'pointer' }}>
+              I agree to the <Link to="/terms-and-conditions" style={{ color: colors.primary, textDecoration: 'none' }}>Terms & Conditions</Link> and <Link to="/privacy-policy" style={{ color: colors.primary, textDecoration: 'none' }}>Privacy Policy</Link>
+            </label>
+          </div>
+
+          <button 
+            type="submit" 
+            style={{
+              ...buttonStyle,
+              opacity: (!loading && acceptedTerms) ? 1 : 0.6,
+              cursor: (!loading && acceptedTerms) ? 'pointer' : 'not-allowed'
+            }}
+            disabled={loading || !acceptedTerms}
+            onMouseEnter={(e) => {
+              if (!loading && acceptedTerms) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 10px 20px -5px rgba(16, 185, 129, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(16, 185, 129, 0.2)';
+            }}
           >
-            {loading ? (
-              // Loading spinner animation
-              <>
-                <div style={{
-                  width: '1rem',
-                  height: '1rem',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderTopColor: 'white',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }} />
-                <style>{`
-                  @keyframes spin {
-                    to { transform: rotate(360deg); }
-                  }
-                `}</style>
-                <span>Logging in...</span>
-              </>
-            ) : (
-              // Default button content
-              <>
-                <Users size={18} />
-                <span>Login</span>
-              </>
-            )}
+            {loading ? 'Logging In...' : 'Login'}
+            {!loading && <Key size={18} />}
           </button>
         </form>
 
-        {/* Sign Up Section for new students */}
-        <div style={signupSectionStyle}>
-          <p style={{ marginBottom: '0.5rem' }}>
-            Don't have an account? 
+        <div style={{
+          marginTop: '2rem',
+          textAlign: 'center',
+          borderTop: `1px solid ${colors.border}`,
+          paddingTop: '1.5rem'
+        }}>
+          <p style={{ color: colors.primary, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            <BookOpen size={16} />
+            Need help accessing your account?
           </p>
-          <Link 
-            onClick={(e) => {
-              e.preventDefault();
-              alert('Please communicate with the school administrator to get a student account.');
-            
-            }}
-            style={signupLinkStyle}
-          >
-            <UserPlus size={16} />
-            <span>Sign Up</span>
-          </Link>
-        </div>
-
-        {/* Footer with copyright information */}
-        <div style={footerStyle}>
-          <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-            © 2025 Wazi Education Management System
+          <p style={{ color: colors.textMuted, fontSize: '0.85rem' }}>
+            Contact your teacher regarding your admission number.
           </p>
         </div>
       </div>
