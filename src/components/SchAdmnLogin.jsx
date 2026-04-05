@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 import { 
   Users, 
   Shield, 
@@ -25,6 +26,19 @@ const SchoolAdminLogin = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('admin_saved_email');
+    const savedPassword = localStorage.getItem('admin_saved_password');
+    if (savedEmail && savedPassword) {
+      setFormData({
+        email: savedEmail,
+        password: savedPassword
+      });
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -81,11 +95,19 @@ const SchoolAdminLogin = () => {
         localStorage.setItem('user', JSON.stringify(data.data));
         sessionStorage.setItem('access_token', data.data.access_token);
         
+        if (rememberMe) {
+          localStorage.setItem('admin_saved_email', formData.email);
+          localStorage.setItem('admin_saved_password', formData.password);
+        } else {
+          localStorage.removeItem('admin_saved_email');
+          localStorage.removeItem('admin_saved_password');
+        }
+
         setTimeout(() => {
           navigate('/admin/dashboard');
         }, 2000);
       } else {
-        setError(data.message || 'Login failed. Please check your credentials.');
+        setError(sanitizeErrorMessage(data.message, 'Login failed. Please check your credentials.'));
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -342,17 +364,31 @@ const SchoolAdminLogin = () => {
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '1rem' }}>
-            <input 
-              type="checkbox" 
-              id="terms" 
-              checked={acceptedTerms} 
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
-              style={{ marginTop: '0.25rem', accentColor: colors.primary, cursor: 'pointer', width: '16px', height: '16px' }}
-            />
-            <label htmlFor="terms" style={{ color: colors.textSecondary, fontSize: '0.9rem', lineHeight: '1.5', cursor: 'pointer' }}>
-              I agree to the <Link to="/terms-and-conditions" style={{ color: colors.primary, textDecoration: 'none' }}>Terms & Conditions</Link> and <Link to="/privacy-policy" style={{ color: colors.primary, textDecoration: 'none' }}>Privacy Policy</Link>
-            </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <input 
+                type="checkbox" 
+                id="remember" 
+                checked={rememberMe} 
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{ accentColor: colors.primary, cursor: 'pointer', width: '16px', height: '16px' }}
+              />
+              <label htmlFor="remember" style={{ color: colors.textSecondary, fontSize: '0.9rem', cursor: 'pointer' }}>
+                Remember me
+              </label>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <input 
+                type="checkbox" 
+                id="terms" 
+                checked={acceptedTerms} 
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                style={{ marginTop: '0.25rem', accentColor: colors.primary, cursor: 'pointer', width: '16px', height: '16px' }}
+              />
+              <label htmlFor="terms" style={{ color: colors.textSecondary, fontSize: '0.9rem', lineHeight: '1.5', cursor: 'pointer' }}>
+                I agree to the <Link to="/terms-and-conditions" style={{ color: colors.primary, textDecoration: 'none' }}>Terms & Conditions</Link> and <Link to="/privacy-policy" style={{ color: colors.primary, textDecoration: 'none' }}>Privacy Policy</Link>
+              </label>
+            </div>
           </div>
 
           <button 

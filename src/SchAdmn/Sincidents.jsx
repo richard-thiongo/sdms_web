@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import SincidentModal from './SincidentModal';
 import sTierUtils from './utils/stierUtils';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const Sincidents = () => {
   // State for incidents data
@@ -162,8 +163,8 @@ const Sincidents = () => {
           addToast('S-tier incidents loaded successfully', 'success');
         }
       } else {
-        setError(result.message || 'Failed to load incidents');
-        addToast(result.message || 'Failed to load incidents', 'error');
+        setError(sanitizeErrorMessage(result.message, 'Failed to load incidents'));
+        addToast(sanitizeErrorMessage(result.message, 'Failed to load incidents'), 'error');
       }
     } catch (error) {
       console.error('Error fetching incidents:', error);
@@ -842,9 +843,9 @@ const Sincidents = () => {
                 borderCollapse: 'collapse',
                 minWidth: '1200px'
               }}>
-                <thead>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                   <tr style={{
-                    background: 'rgba(15, 23, 42, 0.3)',
+                    background: 'rgba(15, 23, 42, 0.95)',
                     borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
                   }}>
                     <th style={{

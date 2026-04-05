@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import ClassModal from './ClassModal';
 import { classAPI, formatDate, calculateClassStats } from './utils/classUtils';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const Classes = () => {
   // State for classes data
@@ -190,8 +191,8 @@ const Classes = () => {
           addToast('Classes loaded successfully', 'success');
         }
       } else {
-        setError(data.message || 'Failed to load classes');
-        addToast(data.message || 'Failed to load classes', 'error');
+        setError(sanitizeErrorMessage(data.message, 'Failed to load classes'));
+        addToast(sanitizeErrorMessage(data.message, 'Failed to load classes'), 'error');
       }
     } catch (error) {
       console.error('Error fetching classes:', error);
@@ -828,9 +829,9 @@ const Classes = () => {
                 borderCollapse: 'collapse',
                 minWidth: '900px'
               }}>
-                <thead>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                   <tr style={{
-                    background: 'rgba(15, 23, 42, 0.3)',
+                    background: 'rgba(15, 23, 42, 0.95)',
                     borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
                   }}>
                     <th style={{

@@ -7,6 +7,7 @@ import {
   Clock, Award, Users, Maximize2, Download, ZoomIn, ZoomOut
 } from 'lucide-react';
 import { studentAPI, formatDate, formatDateTime, getSeverityColor, getStatusColor, getInitials } from './utils/studentUtils';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const StudentModal = ({ studentData, isOpen, onClose, onUpdate, onDelete, view = 'details' }) => {
   const [activeTab, setActiveTab] = useState(view);
@@ -48,7 +49,7 @@ const StudentModal = ({ studentData, isOpen, onClose, onUpdate, onDelete, view =
       if (data.success) {
         setIncidents(data.data.incidents || []);
       } else {
-        setError(data.message || 'Failed to load incidents');
+        setError(sanitizeErrorMessage(data.message, 'Failed to load incidents'));
       }
     } catch (error) {
       console.error('Error fetching incidents:', error);
@@ -89,7 +90,7 @@ const StudentModal = ({ studentData, isOpen, onClose, onUpdate, onDelete, view =
         if (onUpdate) onUpdate(updatedStudent);
         setActiveTab('details');
       } else {
-        setError(data.message || 'Failed to update student');
+        setError(sanitizeErrorMessage(data.message, 'Failed to update student'));
       }
     } catch (error) {
       console.error('Error updating student:', error);
@@ -109,7 +110,7 @@ const StudentModal = ({ studentData, isOpen, onClose, onUpdate, onDelete, view =
         if (onDelete) onDelete(student.student_id);
         onClose();
       } else {
-        setError(data.message || 'Failed to delete student');
+        setError(sanitizeErrorMessage(data.message, 'Failed to delete student'));
       }
     } catch (error) {
       console.error('Error deleting student:', error);

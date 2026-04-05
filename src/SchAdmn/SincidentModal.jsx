@@ -7,6 +7,7 @@ import {
   Edit, Save, Download, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import sTierUtils from './utils/stierUtils';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const SincidentModal = ({ 
   incidentData, 
@@ -104,7 +105,7 @@ const SincidentModal = ({
           fileInputRef.current.value = '';
         }
       } else {
-        showToast(result.message || 'Failed to upload evidence', 'error');
+        showToast(sanitizeErrorMessage(result.message, 'Failed to upload evidence'), 'error');
       }
     } catch (error) {
       showToast('Network error occurred', 'error');
@@ -129,7 +130,7 @@ const SincidentModal = ({
           onEvidenceAdded(result.data);
         }
       } else {
-        showToast(result.message || 'Failed to delete evidence', 'error');
+        showToast(sanitizeErrorMessage(result.message, 'Failed to delete evidence'), 'error');
       }
     } catch (error) {
       showToast('Network error occurred', 'error');
@@ -161,7 +162,7 @@ const SincidentModal = ({
         }
         onClose();
       } else {
-        showToast(result.message || `Failed to ${action} incident`, 'error');
+        showToast(sanitizeErrorMessage(result.message, `Failed to ${action} incident`), 'error');
       }
     } catch (error) {
       showToast('Network error occurred', 'error');
@@ -189,7 +190,7 @@ const SincidentModal = ({
           onUpdate(incidentData.incident_id, { description: incidentDescription });
         }
       } else {
-        showToast(result.message || 'Failed to update incident', 'error');
+        showToast(sanitizeErrorMessage(result.message, 'Failed to update incident'), 'error');
       }
     } catch (error) {
       showToast('Network error occurred', 'error');
@@ -227,7 +228,7 @@ const SincidentModal = ({
           onUpdate(incidentData.incident_id, { hasPunishment: true });
         }
       } else {
-        showToast(result.message || 'Failed to add punishment', 'error');
+        showToast(sanitizeErrorMessage(result.message, 'Failed to add punishment'), 'error');
       }
     } catch (error) {
       showToast('Network error occurred', 'error');
@@ -256,7 +257,7 @@ const SincidentModal = ({
           onUpdate(incidentData.incident_id, { punishmentUpdated: true });
         }
       } else {
-        showToast(result.message || 'Failed to update punishment', 'error');
+        showToast(sanitizeErrorMessage(result.message, 'Failed to update punishment'), 'error');
       }
     } catch (error) {
       showToast('Network error occurred', 'error');
@@ -277,7 +278,7 @@ const SincidentModal = ({
         }
         onClose();
       } else {
-        showToast(result.message || 'Failed to delete incident', 'error');
+        showToast(sanitizeErrorMessage(result.message, 'Failed to delete incident'), 'error');
       }
     } catch (error) {
       showToast('Network error occurred', 'error');

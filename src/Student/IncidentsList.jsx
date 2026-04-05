@@ -7,6 +7,7 @@ import {
   Eye, ArrowLeft, X, Search
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 import './Student.css';
 
 const IncidentsList = ({ type = 'personal' }) => {
@@ -45,7 +46,7 @@ const IncidentsList = ({ type = 'personal' }) => {
         setClassInfo(data.class);
       }
     } catch (err) {
-      setError(err.message);
+      setError(sanitizeErrorMessage(err.message, 'Failed to load incidents'));
     } finally {
       if (showRefresh) setRefreshing(false);
     }

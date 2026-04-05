@@ -30,13 +30,13 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
-  const [viewFilter, setViewFilter] = useState('all');
+  const [viewFilter, setViewFilter] = useState('class');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
   useEffect(() => {
     loadData();
-    setViewFilter('all');
+    setViewFilter('class');
     setSearchQuery('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listType]);
@@ -73,9 +73,7 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
     switch (listType) {
       case 'students': return students;
       case 'incidents':
-        if (viewFilter === 'my') return myIncidents;
-        if (viewFilter === 'school') return schoolIncidents;
-        return classIncidents;
+        return viewFilter === 'school' ? schoolIncidents : classIncidents;
       case 'classIncidentsList':
         return viewFilter === 'school' ? schoolClassIncidents : classLevelIncidents;
       case 'myIncidents': return myIncidents;
@@ -170,19 +168,13 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
         {(listType === 'incidents' || listType === 'classIncidentsList') && (
           <div className="teacher-filter-group">
             <button
-              className={viewFilter === 'all' ? "teacher-filter-active" : "teacher-filter-btn"}
-              onClick={() => setViewFilter('all')}
-            >All</button>
+              className={viewFilter === 'class' ? "teacher-filter-active" : "teacher-filter-btn"}
+              onClick={() => setViewFilter('class')}
+            >Class</button>
             <button
-              className={viewFilter === 'personal' ? "teacher-filter-active" : "teacher-filter-btn"}
-              onClick={() => setViewFilter('personal')}
-            >Individual</button>
-            {listType !== 'incidents' && (
-              <button
-                className={viewFilter === 'school' ? "teacher-filter-active" : "teacher-filter-btn"}
-                onClick={() => setViewFilter('school')}
-              >School</button>
-            )}
+              className={viewFilter === 'school' ? "teacher-filter-active" : "teacher-filter-btn"}
+              onClick={() => setViewFilter('school')}
+            >School</button>
           </div>
         )}
       </div>

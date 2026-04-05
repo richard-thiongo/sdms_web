@@ -13,6 +13,7 @@ import {
   getStudentInitials, truncateText, calculateIncidentStats,
   formatPunishmentDate
 } from './utils/incidentUtils';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const AandBincidents = () => {
   const [incidents, setIncidents] = useState([]);
@@ -98,8 +99,8 @@ const AandBincidents = () => {
         setIncidents(data.data.incidents || []);
         if (showLoading) addToast('A/B incidents loaded successfully', 'success');
       } else {
-        setError(data.message || 'Failed to load incidents');
-        addToast(data.message || 'Failed to load incidents', 'error');
+        setError(sanitizeErrorMessage(data.message, 'Failed to load incidents'));
+        addToast(sanitizeErrorMessage(data.message, 'Failed to load incidents'), 'error');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -124,7 +125,7 @@ const AandBincidents = () => {
         addToast(`Incident ${status === 'approved' ? 'approved' : 'rejected'} successfully`, 'success');
         closeIncidentModal();
       } else {
-        addToast(result.message || 'Failed to update incident status', 'error');
+        addToast(sanitizeErrorMessage(result.message, 'Failed to update incident status'), 'error');
       }
     } catch (err) {
       addToast('Network error. Please try again.', 'error');
@@ -396,8 +397,8 @@ const AandBincidents = () => {
               </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1200px' }}>
-                <thead>
-                  <tr style={{ background: 'rgba(15,23,42,0.3)', borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                  <tr style={{ background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
                     {['Incident Details', 'Student & Class', 'Reporter', 'Punishment', 'Date', 'Actions'].map(col => (
                       <th key={col} style={{ padding: '1rem', textAlign: 'left', color: '#cbd5e1', fontWeight: '600', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{col}</th>
                     ))}

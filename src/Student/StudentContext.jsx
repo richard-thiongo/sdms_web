@@ -1,5 +1,6 @@
 // Student/StudentContext.jsx
-import React, { createContext, useState, useContext, useCallback } from 'react';
+import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const StudentContext = createContext();
 
@@ -10,6 +11,8 @@ export const useStudent = () => {
 };
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+let refreshPromise = null;
 
 export const StudentProvider = ({ children }) => {
   const [loading, setLoading] = useState({
@@ -32,10 +35,10 @@ export const StudentProvider = ({ children }) => {
   });
   const [selectedIncident, setSelectedIncident] = useState(null);
 
-  const getToken = () => localStorage.getItem('access_token');
-  const getRefreshToken = () => localStorage.getItem('refresh_token');
+  const getToken = useCallback(() => localStorage.getItem('access_token'), []);
+  const getRefreshToken = useCallback(() => localStorage.getItem('refresh_token'), []);
 
-  const isTokenExpired = (token) => {
+  const isTokenExpired = useCallback((token) => {
     try {
       if (!token) return true;
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -46,40 +49,55 @@ export const StudentProvider = ({ children }) => {
       console.error('Error checking token expiration:', error);
       return true;
     }
-  };
+  }, []);
 
   const handleLogout = useCallback(() => {
-    localStorage.clear();
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('student_data');
+    localStorage.removeItem('student_id');
+    localStorage.removeItem('full_name');
+    localStorage.removeItem('class_name');
     sessionStorage.clear();
     window.location.href = '/students/login';
   }, []);
 
   const refreshAccessToken = useCallback(async () => {
-    try {
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) throw new Error('No refresh token');
-
-      const response = await fetch(`${API_URL}/student/refresh`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${refreshToken}` }
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        localStorage.setItem('access_token', result.data.access_token);
-        // Also update sessionStorage if it exists
-        if (sessionStorage.getItem('access_token')) {
-          sessionStorage.setItem('access_token', result.data.access_token);
-        }
-        return result.data.access_token;
-      }
-      throw new Error('Failed to refresh token');
-    } catch (error) {
-      console.error('Token refresh error:', error);
-      handleLogout();
-      throw error;
+    if (refreshPromise) {
+      return refreshPromise;
     }
-  }, [handleLogout]);
+
+    refreshPromise = (async () => {
+      try {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) throw new Error('No refresh token');
+
+        const response = await fetch(`${API_URL}/student/refresh`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${refreshToken}` }
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          localStorage.setItem('access_token', result.data.access_token);
+          // Also update sessionStorage if it exists
+          if (sessionStorage.getItem('access_token')) {
+            sessionStorage.setItem('access_token', result.data.access_token);
+          }
+          refreshPromise = null;
+          return result.data.access_token;
+        }
+        throw new Error('Failed to refresh token');
+      } catch (error) {
+        console.error('Token refresh error:', error);
+        refreshPromise = null;
+        handleLogout();
+        throw error;
+      }
+    })();
+
+    return refreshPromise;
+  }, [handleLogout, getRefreshToken]);
 
   const fetchWithAuth = useCallback(async (url, options = {}) => {
     let token = getToken();
@@ -115,7 +133,7 @@ export const StudentProvider = ({ children }) => {
     }
 
     return await response.json();
-  }, [refreshAccessToken]);
+  }, [refreshAccessToken, getToken, isTokenExpired]);
 
   const clearMessages = () => {
     setError(null);
@@ -141,7 +159,7 @@ export const StudentProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to load dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(sanitizeErrorMessage(err.message, 'Operation failed'));
       throw err;
     } finally {
       setLoading(prev => ({ ...prev, dashboard: false }));
@@ -173,7 +191,7 @@ export const StudentProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to load incidents');
     } catch (err) {
-      setError(err.message);
+      setError(sanitizeErrorMessage(err.message, 'Operation failed'));
       throw err;
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -190,12 +208,30 @@ export const StudentProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to load incident details');
     } catch (err) {
-      setError(err.message);
+      setError(sanitizeErrorMessage(err.message, 'Operation failed'));
       throw err;
     } finally {
       setLoading(prev => ({ ...prev, details: false }));
     }
   }, [fetchWithAuth]);
+
+  useEffect(() => {
+    const checkTokenExpiration = async () => {
+      const token = getToken();
+      if (token && isTokenExpired(token)) {
+        try {
+          await refreshAccessToken();
+        } catch (error) {
+          console.error('Background token refresh failed:', error);
+        }
+      }
+    };
+
+    // Check token expiration every minute
+    const intervalId = setInterval(checkTokenExpiration, 60000);
+    
+    return () => clearInterval(intervalId);
+  }, [getToken, isTokenExpired, refreshAccessToken]);
 
   const value = {
     loading,
@@ -221,3 +257,4 @@ export const StudentProvider = ({ children }) => {
 };
 
 export default StudentContext;
+

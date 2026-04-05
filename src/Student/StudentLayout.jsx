@@ -18,7 +18,12 @@ const StudentLayout = () => {
   }, []);
   
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('student_data');
+    localStorage.removeItem('student_id');
+    localStorage.removeItem('full_name');
+    localStorage.removeItem('class_name');
     sessionStorage.clear();
     navigate('/students/login');
   };

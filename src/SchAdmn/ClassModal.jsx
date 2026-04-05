@@ -675,8 +675,8 @@ const ClassModal = ({ classData, isOpen, onClose, onUpdate, onDelete, view = 'de
                   overflow: 'hidden'
                 }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ background: 'rgba(15, 23, 42, 0.5)', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                    <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                      <tr style={{ background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
                         <th style={{ padding: '1rem', textAlign: 'left', color: '#cbd5e1', fontWeight: '600', fontSize: '0.9rem' }}>Student</th>
                         <th style={{ padding: '1rem', textAlign: 'left', color: '#cbd5e1', fontWeight: '600', fontSize: '0.9rem' }}>Admission Number</th>
                         <th style={{ padding: '1rem', textAlign: 'left', color: '#cbd5e1', fontWeight: '600', fontSize: '0.9rem' }}>Joined</th>

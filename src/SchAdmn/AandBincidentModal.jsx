@@ -11,6 +11,7 @@ import {
   getSeverityBadge, getStatusBadge, getPunishmentStatus,
   processEvidenceUrls, getStudentInitials
 } from './utils/incidentUtils';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const AandBincidentModal = ({ 
   incidentData, 
@@ -51,7 +52,7 @@ const AandBincidentModal = ({
       if (result && result.success) {
         onClose();
       } else {
-        setError(result?.message || 'Failed to update incident status');
+        setError(sanitizeErrorMessage(result?.message, 'Failed to update incident status'));
       }
     } catch (error) {
       console.error('Error updating incident status:', error);

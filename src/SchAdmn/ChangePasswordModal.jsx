@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Lock, Key, CheckCircle, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -59,7 +60,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
           setSuccess('');
         }, 2000);
       } else {
-        setError(data.message || 'Failed to update password. Please try again.');
+        setError(sanitizeErrorMessage(data.message, 'Failed to update password. Please try again.'));
       }
     } catch (err) {
       console.error(err);

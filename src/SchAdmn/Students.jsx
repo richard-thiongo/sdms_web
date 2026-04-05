@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import StudentModal from './StudentModal';
 import { studentAPI, classAPI, formatDate, calculateStudentStats, getInitials } from './utils/studentUtils';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const Students = () => {
   // State for students data
@@ -229,8 +230,8 @@ const Students = () => {
           addToast('Students loaded successfully', 'success');
         }
       } else {
-        setError(data.message || 'Failed to load students');
-        addToast(data.message || 'Failed to load students', 'error');
+        setError(sanitizeErrorMessage(data.message, 'Failed to load students'));
+        addToast(sanitizeErrorMessage(data.message, 'Failed to load students'), 'error');
       }
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -878,9 +879,9 @@ const Students = () => {
                 borderCollapse: 'collapse',
                 minWidth: '1000px'
               }}>
-                <thead>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                   <tr style={{
-                    background: 'rgba(15, 23, 42, 0.3)',
+                    background: 'rgba(15, 23, 42, 0.95)',
                     borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
                   }}>
                     <th style={{

@@ -6,7 +6,36 @@ import {
   ArrowRight, Link as LinkIcon, GraduationCap, Mail
 } from 'lucide-react';
 import { managementAPI } from './utils/classUtils';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 import './SchAdmn.css';
+
+const getSchoolId = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user?.school_id;
+  } catch { return null; }
+};
+
+const Toast = ({ message, type = 'success', onClose }) => {
+  const [leaving, setLeaving] = useState(false);
+  useEffect(() => {
+    const t1 = setTimeout(() => setLeaving(true), 3800);
+    const t2 = setTimeout(() => { if (onClose) onClose(); }, 4300);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [onClose]);
+  const isSuccess = type === 'success';
+  return (
+    <div className={`schadmn-toast ${leaving ? 'schadmn-toast-leaving' : ''} ${isSuccess ? 'schadmn-toast-success' : 'schadmn-toast-error'}`}>
+      <div className={`schadmn-toast-icon ${isSuccess ? 'success' : 'error'}`}>
+        {isSuccess ? <CheckCircle size={14} color="#34d399" /> : <AlertCircle size={14} color="#f87171" />}
+      </div>
+      <span className="schadmn-toast-msg">{message}</span>
+      <button onClick={() => { setLeaving(true); setTimeout(() => { if (onClose) onClose(); }, 450); }} className="schadmn-toast-close">
+        <XCircle size={14} />
+      </button>
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('classes');
@@ -41,7 +70,6 @@ const Dashboard = () => {
   const addToast = useCallback((message, type = 'success') => {
     const id = ++toastIdCounter.current;
     setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => { setToasts(prev => prev.filter(toast => toast.id !== id)); }, 5000);
     return id;
   }, []);
 
@@ -49,33 +77,6 @@ const Dashboard = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
 
-  const Toast = ({ message, type = 'success', onClose }) => {
-    const [leaving, setLeaving] = useState(false);
-    useEffect(() => {
-      const t1 = setTimeout(() => setLeaving(true), 3800);
-      const t2 = setTimeout(() => { if (onClose) onClose(); }, 4300);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
-    }, [onClose]);
-    const isSuccess = type === 'success';
-    return (
-      <div className={`schadmn-toast ${leaving ? 'schadmn-toast-leaving' : ''} ${isSuccess ? 'schadmn-toast-success' : 'schadmn-toast-error'}`}>
-        <div className={`schadmn-toast-icon ${isSuccess ? 'success' : 'error'}`}>
-          {isSuccess ? <CheckCircle size={14} color="#34d399" /> : <AlertCircle size={14} color="#f87171" />}
-        </div>
-        <span className="schadmn-toast-msg">{message}</span>
-        <button onClick={() => { setLeaving(true); setTimeout(() => { if (onClose) onClose(); }, 450); }} className="schadmn-toast-close">
-          <XCircle size={14} />
-        </button>
-      </div>
-    );
-  };
-
-  const getSchoolId = () => {
-    try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      return user?.school_id;
-    } catch { return null; }
-  };
 
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -102,7 +103,7 @@ const Dashboard = () => {
       sessionStorage.setItem('schadmn_classes', JSON.stringify(newClasses));
       sessionStorage.setItem('schadmn_teachers', JSON.stringify(newTeachers));
     } catch (err) {
-      if (!silent) setError(err.message || 'Failed to load data');
+      if (!silent) setError(sanitizeErrorMessage(err.message, 'Failed to load data'));
     } finally {
       if (!silent) setLoading(false);
     }
@@ -124,7 +125,7 @@ const Dashboard = () => {
       addToast('Class created successfully', 'success');
       fetchData(true);
     } catch (err) {
-      addToast(err.message || 'Error creating class', 'error');
+      addToast(sanitizeErrorMessage(err.message, 'Error creating class'), 'error');
     }
   };
 
@@ -139,7 +140,7 @@ const Dashboard = () => {
       addToast('Teacher registered successfully', 'success');
       fetchData(true);
     } catch (err) {
-      addToast(err.message || 'Error creating teacher', 'error');
+      addToast(sanitizeErrorMessage(err.message, 'Error creating teacher'), 'error');
     }
   };
 
@@ -151,7 +152,7 @@ const Dashboard = () => {
       const res = await managementAPI.getAvailableTeachers(getSchoolId(), true);
       setAvailableTeachers(res.data || []);
     } catch (err) {
-      addToast('Failed to load available teachers', 'error');
+      addToast(sanitizeErrorMessage(err.message, 'Failed to load available teachers'), 'error');
     }
   };
 
@@ -171,7 +172,7 @@ const Dashboard = () => {
       addToast('Teacher assigned successfully', 'success');
       fetchData(true);
     } catch (err) {
-      addToast(err.message || 'Error assigning teacher', 'error');
+      addToast(sanitizeErrorMessage(err.message, 'Error assigning teacher'), 'error');
     }
   };
 
@@ -183,7 +184,7 @@ const Dashboard = () => {
       addToast('Teacher unassigned successfully', 'success');
       fetchData(true);
     } catch (err) {
-      addToast(err.message || 'Error unassigning teacher', 'error');
+      addToast(sanitizeErrorMessage(err.message, 'Error unassigning teacher'), 'error');
     }
   };
 

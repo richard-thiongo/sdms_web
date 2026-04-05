@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 import { 
   ArrowLeft, 
   User,
@@ -24,6 +25,21 @@ const StudentLogin = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedFirstName = localStorage.getItem('student_saved_first_name');
+    const savedLastName = localStorage.getItem('student_saved_last_name');
+    const savedAdmission = localStorage.getItem('student_saved_admission_number');
+    if (savedFirstName && savedLastName && savedAdmission) {
+      setFormData({
+        first_name: savedFirstName,
+        last_name: savedLastName,
+        admission_number: savedAdmission
+      });
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,11 +100,21 @@ const StudentLogin = () => {
         localStorage.setItem('full_name', data.data.full_name);
         localStorage.setItem('class_name', data.data.class_name || 'Not Assigned');
         
+        if (rememberMe) {
+          localStorage.setItem('student_saved_first_name', formData.first_name);
+          localStorage.setItem('student_saved_last_name', formData.last_name);
+          localStorage.setItem('student_saved_admission_number', formData.admission_number);
+        } else {
+          localStorage.removeItem('student_saved_first_name');
+          localStorage.removeItem('student_saved_last_name');
+          localStorage.removeItem('student_saved_admission_number');
+        }
+
         setTimeout(() => {
           navigate('/student/dashboard');
         }, 2000);
       } else {
-        setError(data.message || 'Login failed. Please check your credentials.');
+        setError(sanitizeErrorMessage(data.message, 'Login failed. Please check your credentials.'));
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -368,17 +394,31 @@ const StudentLogin = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '1rem' }}>
-            <input 
-              type="checkbox" 
-              id="terms" 
-              checked={acceptedTerms} 
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
-              style={{ marginTop: '0.25rem', accentColor: colors.primary, cursor: 'pointer', width: '16px', height: '16px' }}
-            />
-            <label htmlFor="terms" style={{ color: colors.textSecondary, fontSize: '0.9rem', lineHeight: '1.5', cursor: 'pointer' }}>
-              I agree to the <Link to="/terms-and-conditions" style={{ color: colors.primary, textDecoration: 'none' }}>Terms & Conditions</Link> and <Link to="/privacy-policy" style={{ color: colors.primary, textDecoration: 'none' }}>Privacy Policy</Link>
-            </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <input 
+                type="checkbox" 
+                id="remember" 
+                checked={rememberMe} 
+                onChange={(e) => setRememberMe(e.target.checked)}
+                style={{ accentColor: colors.primary, cursor: 'pointer', width: '16px', height: '16px' }}
+              />
+              <label htmlFor="remember" style={{ color: colors.textSecondary, fontSize: '0.9rem', cursor: 'pointer' }}>
+                Remember me
+              </label>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <input 
+                type="checkbox" 
+                id="terms" 
+                checked={acceptedTerms} 
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                style={{ marginTop: '0.25rem', accentColor: colors.primary, cursor: 'pointer', width: '16px', height: '16px' }}
+              />
+              <label htmlFor="terms" style={{ color: colors.textSecondary, fontSize: '0.9rem', lineHeight: '1.5', cursor: 'pointer' }}>
+                I agree to the <Link to="/terms-and-conditions" style={{ color: colors.primary, textDecoration: 'none' }}>Terms & Conditions</Link> and <Link to="/privacy-policy" style={{ color: colors.primary, textDecoration: 'none' }}>Privacy Policy</Link>
+              </label>
+            </div>
           </div>
 
           <button 

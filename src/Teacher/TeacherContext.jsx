@@ -1,6 +1,7 @@
 // Teacher/TeacherContext.jsx
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
+import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const TeacherContext = createContext();
 
@@ -170,7 +171,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to load dashboard stats');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, dashboard: false }));
@@ -188,7 +189,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to fetch students');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, students: false }));
@@ -207,7 +208,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Search failed');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, search: false }));
@@ -221,7 +222,7 @@ export const TeacherProvider = ({ children }) => {
       if (result.success) return result.data;
       throw new Error(result.message || 'Failed to fetch student details');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, students: false }));
@@ -242,7 +243,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to assign student');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, assign: false }));
@@ -263,7 +264,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to remove student');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, remove: false }));
@@ -290,7 +291,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to report incident');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, report: false }));
@@ -307,7 +308,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to fetch class incidents');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -324,7 +325,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to fetch school incidents');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -341,7 +342,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to fetch your incidents');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -355,7 +356,7 @@ export const TeacherProvider = ({ children }) => {
       if (result.success) return result.data;
       throw new Error(result.message || 'Failed to fetch incident details');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -380,7 +381,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to delete incident');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, delete: false }));
@@ -406,7 +407,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to report class incident');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, reportClass: false }));
@@ -423,7 +424,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to fetch class-level incidents');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -440,7 +441,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to fetch school class incidents');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -454,7 +455,7 @@ export const TeacherProvider = ({ children }) => {
       if (result.success) return result.data;
       throw new Error(result.message || 'Failed to fetch class incident details');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -478,7 +479,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to delete class incident');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, delete: false }));
@@ -511,7 +512,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to upload evidence');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, upload: false }));
@@ -541,7 +542,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to upload evidence');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, upload: false }));
@@ -567,7 +568,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to remove evidence');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, upload: false }));
@@ -585,7 +586,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to load school classes');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, schoolClasses: false }));
@@ -623,7 +624,7 @@ export const TeacherProvider = ({ children }) => {
       }
       throw new Error(result.message || 'Failed to change password');
     } catch (error) {
-      setError(error.message);
+      setError(sanitizeErrorMessage(error.message, 'Operation failed'));
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, password: false }));
