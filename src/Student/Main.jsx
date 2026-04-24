@@ -42,7 +42,8 @@ const Main = () => {
 
   useEffect(() => {
     fetchDashboard().catch(() => {});
-  }, [fetchDashboard]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const goToIncidents = useCallback((type) => {
     navigate(`/student/incidents/${type}`);

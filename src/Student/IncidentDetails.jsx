@@ -37,7 +37,8 @@ const IncidentDetails = () => {
     if (incidentId) {
       fetchIncidentDetails(incidentId, incidentType).catch(() => {});
     }
-  }, [incidentId, incidentType, fetchIncidentDetails]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incidentId, incidentType]);
 
   const goBack = () => {
     navigate(-1);

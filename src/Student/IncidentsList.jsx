@@ -32,7 +32,19 @@ const IncidentsList = ({ type = 'personal' }) => {
     perPage: 20
   });
   
+  const [searchInput, setSearchInput] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => {
+        if (prev.search === searchInput) return prev;
+        return { ...prev, search: searchInput, page: 1 };
+      });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const handleRefresh = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
@@ -53,11 +65,7 @@ const IncidentsList = ({ type = 'personal' }) => {
   }, [fetchIncidents, type, filters]);
 
   const handleSearchChange = (value) => {
-    setFilters(prev => ({
-      ...prev,
-      search: value,
-      page: 1
-    }));
+    setSearchInput(value);
   };
 
   const handleFilterChange = (key, value) => {
@@ -218,7 +226,7 @@ const IncidentsList = ({ type = 'personal' }) => {
                <input
                  type="text"
                  placeholder="Search incidents..."
-                 value={filters.search}
+                 value={searchInput}
                  onChange={(e) => handleSearchChange(e.target.value)}
                  className="student-search-input"
                />
