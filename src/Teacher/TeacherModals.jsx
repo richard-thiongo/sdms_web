@@ -425,24 +425,48 @@ const TeacherModals = ({ modalType, modalData, onClose, onOpenModal }) => {
           <div style={{ flex: 1 }}>
             <label className="teacher-modal-label" style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Start Date</label>
             <div style={{ position: 'relative' }}>
-              <Calendar size={16} color="#94a3b8" className="teacher-input-icon" />
+              <Calendar 
+                size={16} 
+                color="#94a3b8" 
+                className="teacher-input-icon" 
+                style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+                onClick={(e) => {
+                  const input = e.currentTarget.nextElementSibling;
+                  if (input && input.showPicker) input.showPicker();
+                  else if (input) input.focus();
+                }}
+              />
               <input
                 type="date"
                 className="teacher-modal-input teacher-input-with-icon"
                 value={formData.start_date}
                 onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                style={{ cursor: 'pointer' }}
               />
             </div>
           </div>
           <div style={{ flex: 1 }}>
             <label className="teacher-modal-label" style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.35rem' }}>End Date</label>
             <div style={{ position: 'relative' }}>
-              <Calendar size={16} color="#94a3b8" className="teacher-input-icon" />
+              <Calendar 
+                size={16} 
+                color="#94a3b8" 
+                className="teacher-input-icon" 
+                style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+                onClick={(e) => {
+                  const input = e.currentTarget.nextElementSibling;
+                  if (input && input.showPicker) input.showPicker();
+                  else if (input) input.focus();
+                }}
+              />
               <input
                 type="date"
                 className="teacher-modal-input teacher-input-with-icon"
                 value={formData.end_date}
                 onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))}
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                style={{ cursor: 'pointer' }}
               />
             </div>
           </div>
@@ -582,17 +606,49 @@ const TeacherModals = ({ modalType, modalData, onClose, onOpenModal }) => {
           <div style={{ flex: 1 }}>
             <label className="teacher-modal-label" style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.35rem' }}>Start Date</label>
             <div style={{ position: 'relative' }}>
-              <Calendar size={16} color="#94a3b8" className="teacher-input-icon" />
-              <input type="date" className="teacher-modal-input teacher-input-with-icon" value={formData.start_date}
-                onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} />
+              <Calendar 
+                size={16} 
+                color="#94a3b8" 
+                className="teacher-input-icon" 
+                style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+                onClick={(e) => {
+                  const input = e.currentTarget.nextElementSibling;
+                  if (input && input.showPicker) input.showPicker();
+                  else if (input) input.focus();
+                }}
+              />
+              <input 
+                type="date" 
+                className="teacher-modal-input teacher-input-with-icon" 
+                value={formData.start_date}
+                onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} 
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                style={{ cursor: 'pointer' }}
+              />
             </div>
           </div>
           <div style={{ flex: 1 }}>
             <label className="teacher-modal-label" style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.35rem' }}>End Date</label>
             <div style={{ position: 'relative' }}>
-              <Calendar size={16} color="#94a3b8" className="teacher-input-icon" />
-              <input type="date" className="teacher-modal-input teacher-input-with-icon" value={formData.end_date}
-                onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))} />
+              <Calendar 
+                size={16} 
+                color="#94a3b8" 
+                className="teacher-input-icon" 
+                style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+                onClick={(e) => {
+                  const input = e.currentTarget.nextElementSibling;
+                  if (input && input.showPicker) input.showPicker();
+                  else if (input) input.focus();
+                }}
+              />
+              <input 
+                type="date" 
+                className="teacher-modal-input teacher-input-with-icon" 
+                value={formData.end_date}
+                onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))} 
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                style={{ cursor: 'pointer' }}
+              />
             </div>
           </div>
         </div>

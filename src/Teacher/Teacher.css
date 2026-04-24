@@ -1430,6 +1430,23 @@
   margin-top: 0.5rem;
 }
 
+.teacher-action-btn {
+  color: #f8fafc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.teacher-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .teacher-btn-secondary-sm {
   padding: 0.4rem 0.825rem;
   flex-direction: row !important;
@@ -1437,6 +1454,7 @@
   background: rgba(51, 65, 85, 0.4) !important;
   border-radius: 8px !important;
   gap: 0.35rem !important;
+  color: #f8fafc !important;
 }
 
 .teacher-btn-danger-sm {
@@ -1447,6 +1465,7 @@
   border: 1px solid rgba(239, 68, 68, 0.1) !important;
   border-radius: 8px !important;
   gap: 0.35rem !important;
+  color: #ef4444 !important;
 }
 
 .teacher-btn-danger-sm span {
