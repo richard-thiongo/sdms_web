@@ -238,7 +238,7 @@ const TeacherModals = ({ modalType, modalData, onClose, onOpenModal }) => {
   // ── 1. Assign Student ─────────────────────────────────────────────────────
   const renderAssignStudent = () => (
     <div className="teacher-modal-container">
-      <h2 className="teacher-modal-title-v2">Assign Student</h2>
+      <h2 className="teacher-modal-title-v2">Add Student</h2>
 
       <div className="teacher-modal-section">
         <label className="teacher-modal-label">1. Search by Admission Number</label>
