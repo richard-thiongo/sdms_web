@@ -5,6 +5,7 @@ import TeacherDashboard from './TeacherDashboard';
 import TeacherModals from './TeacherModals';
 import TeacherLists from './TeacherLists';
 import TeacherBottomNav from './TeacherBottomNav';
+import TeacherToasts from './TeacherToasts';
 import { Key, LogOut } from 'lucide-react';
 
 const TeacherApp = () => {
@@ -37,6 +38,7 @@ const TeacherApp = () => {
 
   return (
     <TeacherProvider>
+      <TeacherToasts />
       <div className="teacher-app-container">
         {/* Header - Simplified */}
         <div className="teacher-main-header">

@@ -63,7 +63,7 @@ const getFileTypeLabel = (url) => {
 // ─── Main component ───────────────────────────────────────────────────────────
 const TeacherModals = ({ modalType, modalData, onClose, onOpenModal }) => {
   const {
-    loading, error, success, clearMessages,
+    loading,
     searchStudents, assignStudent,
     reportIncident, reportClassIncident,
     fetchStudentDetails, fetchIncidentDetails, fetchClassIncidentDetails,
@@ -1329,20 +1329,7 @@ const TeacherModals = ({ modalType, modalData, onClose, onOpenModal }) => {
       <div className="teacher-modal-content">
         <button className="teacher-modal-close-btn" onClick={onClose}><X size={18} /></button>
 
-        {error && (
-          <div className="teacher-banner teacher-banner-error" style={{ margin: '1rem' }}>
-            <AlertTriangle size={18} />
-            <span style={{ flex: 1 }}>{error}</span>
-            <button onClick={clearMessages} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}><X size={14} /></button>
-          </div>
-        )}
-        {success && (
-          <div className="teacher-banner teacher-banner-success" style={{ margin: '1rem' }}>
-            <CheckCircle size={18} />
-            <span style={{ flex: 1 }}>{success}</span>
-            <button onClick={clearMessages} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}><X size={14} /></button>
-          </div>
-        )}
+
 
         <div className="teacher-modal-body">
           {renderContent()}

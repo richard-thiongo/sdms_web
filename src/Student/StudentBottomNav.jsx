@@ -23,7 +23,7 @@ const StudentBottomNav = () => {
     },
     {
       id: 'class',
-      label: 'Class',
+      label: 'My Class',
       icon: <Users size={20} />,
       path: '/student/incidents/class',
       active: location.pathname === '/student/incidents/class'

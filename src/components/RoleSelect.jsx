@@ -74,12 +74,12 @@ const RoleSelection = () => {
 
       {/* Back Button */}
       <Link to="/" style={{
-        position: 'absolute', top: isMobile ? '1.5rem' : '2.5rem', left: isMobile ? '1.5rem' : '3rem',
-        display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', textDecoration: 'none',
-        fontSize: '0.95rem', fontWeight: 500, zIndex: 10, transition: 'color 0.3s ease'
+        position: 'fixed', top: isMobile ? '1.5rem' : '2.5rem', left: isMobile ? '1.5rem' : '3rem',
+        display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8b5cf6', textDecoration: 'none',
+        fontSize: '0.95rem', fontWeight: 500, zIndex: 100, transition: 'color 0.3s ease'
       }}
-      onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
-      onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+      onMouseEnter={(e) => e.currentTarget.style.color = '#a78bfa'}
+      onMouseLeave={(e) => e.currentTarget.style.color = '#8b5cf6'}
       >
         <ArrowLeft size={18} />
         Back to Home

@@ -924,9 +924,11 @@ const Sincidents = () => {
                       <tr 
                         key={incident.incident_id}
                         className="table-row"
+                        onClick={() => openIncidentModal(incident)}
                         style={{
                           borderBottom: '1px solid rgba(148, 163, 184, 0.05)',
-                          background: index % 2 === 0 ? 'transparent' : 'rgba(15, 23, 42, 0.15)'
+                          background: index % 2 === 0 ? 'transparent' : 'rgba(15, 23, 42, 0.15)',
+                          cursor: 'pointer'
                         }}
                       >
                         <td style={{ padding: '1rem' }}>

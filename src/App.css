@@ -247,7 +247,6 @@ a {
 
 a:hover {
   color: var(--primary-light);
-  text-decoration: underline;
 }
 
 /* CUSTOM SCROLLBAR - Keep for global use */

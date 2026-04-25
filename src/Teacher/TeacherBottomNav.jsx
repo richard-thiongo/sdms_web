@@ -19,14 +19,14 @@ const TeacherBottomNav = ({ currentView, listType, onNavigateToDashboard, onNavi
     },
     {
       id: 'classIncidents',
-      label: 'Class',
+      label: 'Class Incidents',
       icon: <History size={20} />,
       active: currentView === 'lists' && listType === 'classIncidentsList',
       onClick: () => onNavigateToLists('classIncidentsList')
     },
     {
       id: 'schoolIncidents',
-      label: 'School',
+      label: 'Student Incidents',
       icon: <AlertTriangle size={20} />,
       active: currentView === 'lists' && listType === 'incidents',
       onClick: () => onNavigateToLists('incidents')

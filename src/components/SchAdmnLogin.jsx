@@ -147,15 +147,9 @@ const SchoolAdminLogin = () => {
   };
 
   const cardStyle = {
-    background: colors.cardBg,
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    borderRadius: '24px',
-    border: `1px solid ${colors.border}`,
     padding: '2.5rem',
     width: '100%',
     maxWidth: '420px',
-    boxShadow: colors.shadow,
     position: 'relative',
     zIndex: 1
   };
@@ -237,17 +231,17 @@ const SchoolAdminLogin = () => {
   };
 
   const backButtonStyle = {
-    position: 'absolute',
+    position: 'fixed',
     top: '1.5rem',
     left: '1.5rem',
-    color: colors.textMuted,
+    color: '#8b5cf6',
     textDecoration: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
     fontSize: '0.9rem',
     transition: 'color 0.3s ease',
-    zIndex: 10
+    zIndex: 100
   };
 
   return (
@@ -255,25 +249,14 @@ const SchoolAdminLogin = () => {
       <Link 
         to="/role" 
         style={backButtonStyle}
-        onMouseEnter={(e) => e.target.style.color = colors.textPrimary}
-        onMouseLeave={(e) => e.target.style.color = colors.textMuted}
+        onMouseEnter={(e) => e.target.style.color = '#a78bfa'}
+        onMouseLeave={(e) => e.target.style.color = '#8b5cf6'}
       >
         <ArrowLeft size={18} />
         Back
       </Link>
 
       <div style={cardStyle}>
-        {/* Top Border Gradient */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '4px',
-          background: `linear-gradient(90deg, ${colors.primary}, #a78bfa)`,
-          borderRadius: '24px 24px 0 0',
-          opacity: 0.8
-        }} />
 
         <div style={headerStyle}>
           <div style={logoContainerStyle}>

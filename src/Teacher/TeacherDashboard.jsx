@@ -15,13 +15,10 @@ const TeacherDashboard = ({ onOpenModal, onNavigateToLists }) => {
     classIncidents,
     classLevelIncidents,
     loading,
-    error,
-    success,
     fetchDashboardStats,
     fetchClassStudents,
     fetchClassIncidents,
     fetchClassLevelIncidents,
-    clearMessages,
   } = useTeacher();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -131,20 +128,7 @@ const TeacherDashboard = ({ onOpenModal, onNavigateToLists }) => {
         </div>
       </div>
 
-      {/* ── Error / Success banners ── */}
-      {error && (
-        <div className="teacher-error-banner teacher-badge-flex">
-          <AlertTriangle size={16} />
-          <span className="teacher-flex-1">{error}</span>
-          <button onClick={clearMessages} className="teacher-banner-close">✕</button>
-        </div>
-      )}
-      {success && (
-        <div className="teacher-success-banner teacher-badge-flex">
-          <span className="teacher-flex-1">{success}</span>
-          <button onClick={clearMessages} className="teacher-banner-close">✕</button>
-        </div>
-      )}
+
 
       {/* ── Stats Row 1 ── */}
       <h2 className="teacher-section-title">Overview</h2>
@@ -197,21 +181,21 @@ const TeacherDashboard = ({ onOpenModal, onNavigateToLists }) => {
           <div className="teacher-action-icon teacher-action-icon-red">
             <AlertTriangle size={24} />
           </div>
-          <span className="teacher-action-text">Report Student Incident</span>
+          <span className="teacher-action-text">Report a Student </span>
         </button>
 
         <button className="teacher-action-btn" onClick={() => onOpenModal('reportClassIncident')}>
           <div className="teacher-action-icon teacher-action-icon-blue">
             <School size={24} />
           </div>
-          <span className="teacher-action-text">Report Class Incident</span>
+          <span className="teacher-action-text">Report a Class</span>
         </button>
 
         <button className="teacher-action-btn" onClick={() => onOpenModal('assignStudent')}>
           <div className="teacher-action-icon teacher-action-icon-green">
             <UserPlus size={24} />
           </div>
-          <span className="teacher-action-text">Assign Student</span>
+          <span className="teacher-action-text">Add a Student</span>
         </button>
       </div>
 

@@ -379,85 +379,7 @@ const ClassModal = ({ classData, isOpen, onClose, onUpdate, onDelete, view = 'de
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div style={{ animation: 'slideIn 0.3s ease' }}>
-              {/* Statistics */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1rem',
-                marginBottom: '2rem'
-              }}>
-                <div style={{
-                  background: 'rgba(30, 41, 59, 0.6)',
-                  borderRadius: '12px',
-                  padding: '1.25rem',
-                  border: '1px solid rgba(148, 163, 184, 0.1)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                    <div style={{
-                      background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.2) 100%)',
-                      borderRadius: '10px',
-                      padding: '0.75rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <Users size={24} color="#8b5cf6" />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Total Students</div>
-                      <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalStudents}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div style={{
-                  background: 'rgba(30, 41, 59, 0.6)',
-                  borderRadius: '12px',
-                  padding: '1.25rem',
-                  border: '1px solid rgba(148, 163, 184, 0.1)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                    <div style={{
-                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.2) 100%)',
-                      borderRadius: '10px',
-                      padding: '0.75rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <AlertCircle size={24} color="#ef4444" />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Class Incidents</div>
-                      <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalClassIncidents}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div style={{
-                  background: 'rgba(30, 41, 59, 0.6)',
-                  borderRadius: '12px',
-                  padding: '1.25rem',
-                  border: '1px solid rgba(148, 163, 184, 0.1)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                    <div style={{
-                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.2) 100%)',
-                      borderRadius: '10px',
-                      padding: '0.75rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <ShieldAlert size={24} color="#f59e0b" />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Individual Incidents</div>
-                      <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f8fafc' }}>{stats.totalIndividualIncidents}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
               
               {/* Teacher Information */}
               {classData.teacher_id && (
@@ -550,12 +472,7 @@ const ClassModal = ({ classData, isOpen, onClose, onUpdate, onDelete, view = 'de
                       {classData.class_id}
                     </div>
                   </div>
-                  <div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>School</div>
-                    <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>
-                      {classData.school_name || 'N/A'}
-                    </div>
-                  </div>
+
                   <div>
                     <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '4px' }}>Created</div>
                     <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>
@@ -669,72 +586,88 @@ const ClassModal = ({ classData, isOpen, onClose, onUpdate, onDelete, view = 'de
                 </div>
               ) : (
                 <div style={{
-                  background: 'rgba(30, 41, 59, 0.3)',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(148, 163, 184, 0.1)',
-                  overflow: 'hidden'
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)'
                 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                      <tr style={{ background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
-                        <th style={{ padding: '1rem', textAlign: 'left', color: '#cbd5e1', fontWeight: '600', fontSize: '0.9rem' }}>Student</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', color: '#cbd5e1', fontWeight: '600', fontSize: '0.9rem' }}>Admission Number</th>
-                        <th style={{ padding: '1rem', textAlign: 'left', color: '#cbd5e1', fontWeight: '600', fontSize: '0.9rem' }}>Joined</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {students.map((student, index) => (
-                        <tr 
-                          key={student.student_id} 
-                          style={{ 
-                            borderBottom: index < students.length - 1 ? '1px solid rgba(148, 163, 184, 0.05)' : 'none',
-                            cursor: 'pointer',
-                            transition: 'background 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(148, 163, 184, 0.05)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                          }}
-                        >
-                          <td style={{ padding: '1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              <div style={{
-                                width: '36px',
-                                height: '36px',
-                                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                fontWeight: 'bold',
-                                fontSize: '14px',
-                                flexShrink: 0
-                              }}>
-                                {student.first_name?.[0]}{student.last_name?.[0]}
-                              </div>
-                              <div>
-                                <div style={{ color: '#f1f5f9', fontWeight: '600', marginBottom: '2px' }}>
-                                  {student.first_name} {student.last_name}
-                                </div>
-                                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                                  ID: {student.student_id?.substring(0, 8)}...
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td style={{ padding: '1rem', color: '#e2e8f0', fontFamily: 'monospace' }}>
-                            {student.admission_number}
-                          </td>
-                          <td style={{ padding: '1rem', color: '#e2e8f0', fontSize: '0.9rem' }}>
-                            {formatDate(student.created_at)}
-                          </td>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '650px' }}>
+                      <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                        <tr style={{ background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%)' }}>
+                          <th style={{ padding: '1.25rem 1.5rem', textAlign: 'left', color: '#c4b5fd', fontWeight: '700', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(139, 92, 246, 0.3)' }}>Student</th>
+                          <th style={{ padding: '1.25rem 1.5rem', textAlign: 'left', color: '#c4b5fd', fontWeight: '700', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(139, 92, 246, 0.3)' }}>Admission Number</th>
+                          <th style={{ padding: '1.25rem 1.5rem', textAlign: 'left', color: '#c4b5fd', fontWeight: '700', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(139, 92, 246, 0.3)' }}>Joined</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {students.map((student, index) => (
+                          <tr 
+                            key={student.student_id} 
+                            style={{ 
+                              borderBottom: index < students.length - 1 ? '1px solid rgba(148, 163, 184, 0.1)' : 'none',
+                              background: index % 2 === 0 ? 'rgba(30, 41, 59, 0.4)' : 'rgba(30, 41, 59, 0.2)',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = index % 2 === 0 ? 'rgba(30, 41, 59, 0.4)' : 'rgba(30, 41, 59, 0.2)';
+                            }}
+                          >
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                                  borderRadius: '12px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'white',
+                                  fontWeight: 'bold',
+                                  fontSize: '14px',
+                                  flexShrink: 0,
+                                  boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3)'
+                                }}>
+                                  {student.first_name?.[0]}{student.last_name?.[0]}
+                                </div>
+                                <div>
+                                  <div style={{ color: '#f8fafc', fontWeight: '600', marginBottom: '2px', fontSize: '1rem', whiteSpace: 'nowrap' }}>
+                                    {student.first_name} {student.last_name}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                    ID: {student.student_id?.substring(0, 8)}...
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td style={{ padding: '1.25rem 1.5rem' }}>
+                              <span style={{ 
+                                background: 'rgba(148, 163, 184, 0.1)',
+                                color: '#e2e8f0', 
+                                padding: '0.4rem 0.8rem',
+                                borderRadius: '6px',
+                                fontFamily: 'monospace',
+                                fontSize: '0.9rem',
+                                border: '1px solid rgba(148, 163, 184, 0.2)',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {student.admission_number}
+                              </span>
+                            </td>
+                            <td style={{ padding: '1.25rem 1.5rem', color: '#cbd5e1', fontSize: '0.95rem', whiteSpace: 'nowrap' }}>
+                              {formatDate(student.created_at)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

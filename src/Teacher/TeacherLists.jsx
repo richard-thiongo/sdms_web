@@ -140,7 +140,9 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
 
   return (
     <div>
-      <div className="teacher-header">
+      {/* ── Sticky Header Container ── */}
+      <div className="teacher-sticky-header">
+        <div className="teacher-header">
         <div className="teacher-header-left">
           <button className="teacher-back-btn" onClick={onNavigateToDashboard}>
             <ArrowLeft size={16} />
@@ -170,13 +172,14 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
             <button
               className={viewFilter === 'class' ? "teacher-filter-active" : "teacher-filter-btn"}
               onClick={() => setViewFilter('class')}
-            >Class</button>
+            >My Class</button>
             <button
               className={viewFilter === 'school' ? "teacher-filter-active" : "teacher-filter-btn"}
               onClick={() => setViewFilter('school')}
             >School</button>
           </div>
         )}
+      </div>
       </div>
 
       {/* ── Results count ── */}

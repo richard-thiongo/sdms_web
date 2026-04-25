@@ -12,8 +12,8 @@
   --text-main: #f8fafc;
   --text-dim: #94a3b8;
   --text-dark: #64748b;
-  --nav-height: 80px;
-  --nav-height-scrolled: 64px;
+  --nav-height: 100px;
+  --nav-height-scrolled: 80px;
   
   --border-light: rgba(255, 255, 255, 0.1);
   --border-medium: rgba(255, 255, 255, 0.2);
@@ -163,13 +163,13 @@ body {
 }
 
 .nav-brand img {
-  height: 50px;
+  height: 80px;
   width: auto;
   transition: var(--transition-base);
 }
 
 .navbar.scrolled .nav-brand img {
-  height: 48px;
+  height: 64px;
 }
 
 .nav-links {
@@ -492,6 +492,7 @@ body {
   border-color: var(--role-color);
   background: rgba(30, 41, 59, 0.8);
   box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
+  text-decoration: none;
 }
 
 .portal-icon-box {
