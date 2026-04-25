@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStudent } from './StudentContext';
 import { 
-  Award, BookOpen, AlertCircle, 
+  Award, AlertCircle, 
   ChevronRight, Loader2, 
   CheckCircle, XCircle,
   User, GraduationCap, Users, TrendingUp, ShieldAlert
@@ -252,31 +252,6 @@ const Main = () => {
             </div>
           )}
 
-          <div className="student-actions-grid">
-            <QuickActionButton
-              icon={<ShieldAlert size={32} />}
-              text="View My Incidents"
-              color="#8b5cf6"
-              onClick={() => goToIncidents('personal')}
-            />
-
-            {studentData?.class && (
-              <QuickActionButton
-                icon={<Users size={32} />}
-                text="View Class Incidents"
-                color="#3b82f6"
-                onClick={() => goToIncidents('class')}
-              />
-            )}
-
-            <QuickActionButton
-              icon={<BookOpen size={32} />}
-              text="View All Incidents"
-              color="#22c55e"
-              onClick={() => goToIncidents('all')}
-            />
-          </div>
-
         </div>
     </>
   );
@@ -285,7 +260,7 @@ const Main = () => {
 const StatCard = ({ icon, title, value, footer }) => (
   <div className="student-stat-card">
     <div className="student-stat-top">
-      <div className="student-stat-icon-wrap student-bg-purple-gradient">
+      <div className="student-stat-icon-wrap student-bg-purple">
         {icon}
       </div>
       <div className="student-stat-info">
@@ -391,31 +366,5 @@ const IncidentCard = ({ incident, onClick }) => {
     </div>
   );
 };
-
-const QuickActionButton = ({ icon, text, color, onClick }) => (
-  <button
-    className="student-action-btn"
-    onClick={onClick}
-    style={{
-      background: `${color}10`,
-      border: `1px solid ${color}30`,
-      color: '#c4b5fd',
-      boxShadow: `0 8px 20px -6px ${color}30`
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.background = `${color}25`;
-      e.currentTarget.style.transform = 'translateY(-4px)';
-      e.currentTarget.style.boxShadow = `0 12px 24px -6px ${color}50`;
-      e.currentTarget.style.borderColor = `${color}60`;
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.background = `${color}10`;
-      e.currentTarget.style.transform = 'translateY(0)';
-    }}
-  >
-    {icon}
-    <span>{text}</span>
-  </button>
-);
 
 export default Main;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Shield, Users, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Shield, Users } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const StudentBottomNav = () => {
@@ -27,13 +27,6 @@ const StudentBottomNav = () => {
       icon: <Users size={20} />,
       path: '/student/incidents/class',
       active: location.pathname === '/student/incidents/class'
-    },
-    {
-      id: 'all',
-      label: 'School',
-      icon: <BookOpen size={20} />,
-      path: '/student/incidents/all',
-      active: location.pathname === '/student/incidents/all'
     }
   ];
 

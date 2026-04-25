@@ -14,16 +14,25 @@ const IncidentsList = ({ type = 'personal' }) => {
   const navigate = useNavigate();
   const {
     loading: contextLoading,
-    incidents,
-    pagination,
     fetchIncidents
   } = useStudent();
   
+  const [localIncidents, setLocalIncidents] = useState(null);
+  const [localPagination, setLocalPagination] = useState({
+    page: 1,
+    perPage: 20,
+    total: 0,
+    totalPages: 1
+  });
   const [studentInfo, setStudentInfo] = useState(null);
   const [classInfo, setClassInfo] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+
+  useEffect(() => {
+    setLocalIncidents(null);
+  }, [type]);
   
   const [filters, setFilters] = useState({
     severity: '',
@@ -50,12 +59,16 @@ const IncidentsList = ({ type = 'personal' }) => {
     if (showRefresh) setRefreshing(true);
     setError(null);
     try {
-      const data = await fetchIncidents(type, filters);
-      if (data && type === 'personal' && data.student) {
-        setStudentInfo(data.student);
-      }
-      if (data && type === 'class' && data.class) {
-        setClassInfo(data.class);
+      const data = await fetchIncidents(type, filters, showRefresh === true);
+      if (data) {
+        setLocalIncidents(data.incidents || []);
+        if (data.pagination) setLocalPagination(data.pagination);
+        if (type === 'personal' && data.student) {
+          setStudentInfo(data.student);
+        }
+        if (type === 'class' && data.class) {
+          setClassInfo(data.class);
+        }
       }
     } catch (err) {
       setError(sanitizeErrorMessage(err.message, 'Failed to load incidents'));
@@ -107,7 +120,7 @@ const IncidentsList = ({ type = 'personal' }) => {
 
 
 
-  if (contextLoading.incidents && incidents.length === 0) {
+  if (localIncidents === null || (contextLoading.incidents && localIncidents.length === 0)) {
     return (
       <div className="student-loading-screen">
         <div className="student-loader-content">
@@ -117,6 +130,8 @@ const IncidentsList = ({ type = 'personal' }) => {
       </div>
     );
   }
+
+  const currentIncidents = localIncidents || [];
 
   return (
     <>
@@ -205,7 +220,6 @@ const IncidentsList = ({ type = 'personal' }) => {
               <h1 className="student-page-title">
                 {type === 'personal' && 'My Personal Incidents'}
                 {type === 'class' && 'Class Incidents'}
-                {type === 'all' && 'All Incidents'}
               </h1>
               
               {type === 'personal' && studentInfo && (
@@ -242,8 +256,8 @@ const IncidentsList = ({ type = 'personal' }) => {
                  {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                </button>
                
-               <button
-                 onClick={handleRefresh}
+                <button
+                 onClick={() => handleRefresh(true)}
                  disabled={refreshing}
                  className="student-toolbar-btn"
                >
@@ -272,14 +286,14 @@ const IncidentsList = ({ type = 'personal' }) => {
            )}
 
            <div className="student-incidents-count">
-             <span>Showing {incidents.length} of {pagination.total} incidents</span>
+             <span>Showing {currentIncidents.length} of {localPagination.total} incidents</span>
            </div>
          </div>
 
          <div className="student-content-centered">
            {error ? (
              <ErrorState error={error} onRetry={handleRefresh} />
-           ) : incidents.length === 0 ? (
+           ) : currentIncidents.length === 0 ? (
              <EmptyState
                type={type}
                hasFilter={!!filters.severity || !!filters.search}
@@ -287,7 +301,7 @@ const IncidentsList = ({ type = 'personal' }) => {
              />
            ) : (
              <div className="student-incident-list-col">
-               {incidents.map(incident => (
+               {currentIncidents.map(incident => (
                  <IncidentCard
                    key={incident.incident_id}
                    incident={incident}
@@ -299,10 +313,10 @@ const IncidentsList = ({ type = 'personal' }) => {
              </div>
            )}
 
-           {pagination.totalPages > 1 && (
+           {localPagination.totalPages > 1 && (
              <Pagination
-               page={pagination.page}
-               totalPages={pagination.totalPages}
+               page={localPagination.page}
+               totalPages={localPagination.totalPages}
                onPageChange={handlePageChange}
              />
            )}
@@ -361,11 +375,7 @@ const IncidentCard = ({ incident, type, onClick, onImageClick }) => {
             </span>
           )}
           
-          {type === 'all' && incident.incident_type && (
-            <span className={incident.incident_type === 'personal' ? 'student-badge-personal' : 'student-badge-class'}>
-              {incident.incident_type === 'personal' ? 'Personal' : 'Class'}
-            </span>
-          )}
+
         </div>
       </div>
       

@@ -26,6 +26,7 @@ export const StudentProvider = ({ children }) => {
 
   // Data states
   const [dashboardData, setDashboardData] = useState(null);
+  const [incidentsCache, setIncidentsCache] = useState({});
   const [incidents, setIncidents] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -147,7 +148,10 @@ export const StudentProvider = ({ children }) => {
   };
 
   // API Methods
-  const fetchDashboard = useCallback(async () => {
+  const fetchDashboard = useCallback(async (forceRefresh = false) => {
+    if (dashboardData && !forceRefresh) {
+      return dashboardData;
+    }
     setLoading(prev => ({ ...prev, dashboard: true }));
     try {
       const result = await fetchWithAuth(`${API_URL}/student/dashboard`);
@@ -164,9 +168,17 @@ export const StudentProvider = ({ children }) => {
     } finally {
       setLoading(prev => ({ ...prev, dashboard: false }));
     }
-  }, [fetchWithAuth]);
+  }, [fetchWithAuth, dashboardData]);
 
-  const fetchIncidents = useCallback(async (type = 'personal', filters = {}) => {
+  const fetchIncidents = useCallback(async (type = 'personal', filters = {}, forceRefresh = false) => {
+    const cacheKey = `${type}_${filters.page || 1}_${filters.perPage || 20}_${filters.severity || ''}_${filters.search || ''}`;
+    
+    if (!forceRefresh && incidentsCache[cacheKey]) {
+      setIncidents(incidentsCache[cacheKey].incidents);
+      setPagination(incidentsCache[cacheKey].pagination);
+      return incidentsCache[cacheKey].data;
+    }
+
     setLoading(prev => ({ ...prev, incidents: true }));
     try {
       const params = new URLSearchParams({
@@ -181,12 +193,21 @@ export const StudentProvider = ({ children }) => {
       
       if (result.success) {
         setIncidents(result.data.incidents || []);
-        setPagination(result.data.pagination || {
+        const newPagination = result.data.pagination || {
           page: filters.page || 1,
           perPage: filters.perPage || 20,
           total: 0,
           totalPages: 1
-        });
+        };
+        setPagination(newPagination);
+        setIncidentsCache(prev => ({
+          ...prev,
+          [cacheKey]: {
+            incidents: result.data.incidents || [],
+            pagination: newPagination,
+            data: result.data
+          }
+        }));
         return result.data;
       }
       throw new Error(result.message || 'Failed to load incidents');
@@ -196,9 +217,12 @@ export const StudentProvider = ({ children }) => {
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
     }
-  }, [fetchWithAuth]);
+  }, [fetchWithAuth, incidentsCache]);
 
-  const fetchIncidentDetails = useCallback(async (incidentId, type = 'personal') => {
+  const fetchIncidentDetails = useCallback(async (incidentId, type = 'personal', forceRefresh = false) => {
+    if (!forceRefresh && selectedIncident && selectedIncident.incident_id === parseInt(incidentId)) {
+      return selectedIncident;
+    }
     setLoading(prev => ({ ...prev, details: true }));
     try {
       const result = await fetchWithAuth(`${API_URL}/student/incidents/${incidentId}?type=${type}`);
@@ -213,7 +237,7 @@ export const StudentProvider = ({ children }) => {
     } finally {
       setLoading(prev => ({ ...prev, details: false }));
     }
-  }, [fetchWithAuth]);
+  }, [fetchWithAuth, selectedIncident]);
 
   useEffect(() => {
     const checkTokenExpiration = async () => {

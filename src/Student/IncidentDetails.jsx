@@ -273,7 +273,7 @@ const IncidentDetails = () => {
                       title="Student"
                       name={incident.student.full_name}
                       subtitle={incident.student.admission_number}
-                      gradient="linear-gradient(135deg, #8b5cf6, #7c3aed)"
+                      color="#8b5cf6"
                     />
                   )}
                   
@@ -283,7 +283,7 @@ const IncidentDetails = () => {
                       name={incident.reported_by.full_name}
                       subtitle={`Teacher • ${incident.reported_by.role}`}
                       email={incident.reported_by.email}
-                      gradient="linear-gradient(135deg, #22c55e, #16a34a)"
+                      color="#22c55e"
                     />
                   )}
                   
@@ -293,7 +293,7 @@ const IncidentDetails = () => {
                       name={incident.assigned_by.full_name}
                       subtitle={incident.assigned_by.role}
                       email={incident.assigned_by.email}
-                      gradient="linear-gradient(135deg, #f59e0b, #d97706)"
+                      color="#f59e0b"
                     />
                   )}
                 </div>
@@ -345,11 +345,11 @@ const IncidentDetails = () => {
   );
 };
 
-const PersonCard = ({ title, name, subtitle, email, gradient }) => (
+const PersonCard = ({ title, name, subtitle, email, color }) => (
   <div className="student-person-card">
     <div className="student-person-card-title">{title}</div>
     <div className="student-person-card-body">
-      <div className="student-person-card-avatar" style={{ background: gradient }}>
+      <div className="student-person-card-avatar" style={{ background: color }}>
         {name?.split(' ').map(n => n[0]).join('')}
       </div>
       <div className="student-person-card-info">

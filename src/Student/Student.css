@@ -17,7 +17,7 @@
 /* Base App Container */
 .student-app-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0f1c 0%, #1a1744 50%, #0a0f1c 100%);
+  background: #0f172a;
   color: var(--student-text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -51,7 +51,7 @@
 /* Main Loading State */
 .student-loading-screen {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0f1c 0%, #1a1744 50%, #0a0f1c 100%);
+  background: #0f172a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,10 +141,7 @@
 .student-logo {
   font-size: 1.25rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--student-primary) 0%, #c4b5fd 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--student-primary);
 }
 
 .student-profile-section {
@@ -358,6 +355,10 @@
   flex-shrink: 0;
 }
 
+.student-bg-purple {
+  background: rgba(139, 92, 246, 0.2);
+}
+
 .student-stat-info {
   flex: 1;
   min-width: 0;
@@ -565,7 +566,7 @@
 .student-detail-card-hero {
   padding: 2rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  background: rgba(139, 92, 246, 0.15);
 }
 
 .student-detail-card-hero-top {
@@ -689,7 +690,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  background: rgba(34, 197, 94, 0.15);
 }
 
 .student-punishment-card-detail--complete {
@@ -741,7 +742,7 @@
 }
 
 .student-punishment-card {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  background: rgba(34, 197, 94, 0.15);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 2rem;
