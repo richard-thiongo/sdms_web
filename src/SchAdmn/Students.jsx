@@ -11,6 +11,13 @@ import StudentModal from './StudentModal';
 import { studentAPI, classAPI, formatDate, calculateStudentStats, getInitials } from './utils/studentUtils';
 import { sanitizeErrorMessage } from '../utils/errorUtils';
 
+// Module-level cache to prevent reloading when switching tabs
+let globalStudentsCache = null;
+let globalClassesCache = null;
+let lastStudentsFetchTime = 0;
+let lastClassesFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const Students = () => {
   // State for students data
   const [students, setStudents] = useState([]);
@@ -196,13 +203,21 @@ const Students = () => {
   };
   
   // Fetch classes for filter dropdown
-  const fetchClasses = useCallback(async () => {
+  const fetchClasses = useCallback(async (forceRefresh = false) => {
+    if (!forceRefresh && globalClassesCache && (Date.now() - lastClassesFetchTime < CACHE_DURATION)) {
+      setClasses(globalClassesCache);
+      return;
+    }
+    
     setLoading(prev => ({ ...prev, classes: true }));
     
     try {
       const data = await classAPI.getClasses();
       if (data.success) {
-        setClasses(data.data.classes || []);
+        const classesList = data.data.classes || [];
+        globalClassesCache = classesList;
+        lastClassesFetchTime = Date.now();
+        setClasses(classesList);
       } else {
         console.error('Failed to load classes:', data.message);
       }
@@ -214,7 +229,13 @@ const Students = () => {
   }, []);
   
   // Fetch students
-  const fetchStudents = useCallback(async (showLoading = true) => {
+  const fetchStudents = useCallback(async (showLoading = true, forceRefresh = false) => {
+    if (!forceRefresh && globalStudentsCache && (Date.now() - lastStudentsFetchTime < CACHE_DURATION)) {
+      setStudents(globalStudentsCache);
+      setLoading(prev => ({ ...prev, initial: false, refresh: false }));
+      return;
+    }
+
     if (showLoading) {
       setLoading(prev => ({ ...prev, initial: true }));
     }
@@ -225,8 +246,10 @@ const Students = () => {
       const data = await studentAPI.getStudents();
       if (data.success) {
         const studentsList = data.data.students || [];
+        globalStudentsCache = studentsList;
+        lastStudentsFetchTime = Date.now();
         setStudents(studentsList);
-        if (showLoading) {
+        if (showLoading && studentsList.length > 0) {
           addToast('Students loaded successfully', 'success');
         }
       } else {
@@ -259,8 +282,9 @@ const Students = () => {
   // Refresh data
   const handleRefresh = useCallback(() => {
     setLoading(prev => ({ ...prev, refresh: true }));
-    fetchStudents(false);
-  }, [fetchStudents]);
+    fetchStudents(false, true);
+    fetchClasses(true);
+  }, [fetchStudents, fetchClasses]);
   
   // Open student modal
   const openStudentModal = useCallback((student, view = 'details') => {
@@ -278,19 +302,25 @@ const Students = () => {
   
   // Handle student update
   const handleStudentUpdate = useCallback((updatedStudent) => {
-    setStudents(prev => 
-      prev.map(student => 
+    setStudents(prev => {
+      const newStudents = prev.map(student => 
         student.student_id === updatedStudent.student_id 
           ? { ...student, ...updatedStudent }
           : student
-      )
-    );
+      );
+      globalStudentsCache = newStudents;
+      return newStudents;
+    });
     addToast('Student updated successfully', 'success');
   }, [addToast]);
   
   // Handle student delete
   const handleStudentDelete = useCallback((studentId) => {
-    setStudents(prev => prev.filter(student => student.student_id !== studentId));
+    setStudents(prev => {
+      const newStudents = prev.filter(student => student.student_id !== studentId);
+      globalStudentsCache = newStudents;
+      return newStudents;
+    });
     addToast('Student deleted successfully', 'success');
   }, [addToast]);
   

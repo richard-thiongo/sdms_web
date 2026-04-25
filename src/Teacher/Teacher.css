@@ -564,7 +564,7 @@
   position: sticky;
   top: 65px;
   z-index: 90;
-  background: rgba(10, 15, 28, 0.95);
+  background: rgba(30, 41, 59, 0.95); /* Match teacher-bg-card with slight transparency for blur */
   backdrop-filter: blur(16px);
   padding-top: 1rem;
   padding-bottom: 0.5rem;

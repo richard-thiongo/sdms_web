@@ -9,6 +9,11 @@ import ClassModal from './ClassModal';
 import { classAPI, formatDate, calculateClassStats } from './utils/classUtils';
 import { sanitizeErrorMessage } from '../utils/errorUtils';
 
+// Module-level cache to prevent reloading when switching tabs
+let globalClassesCache = null;
+let lastClassesFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const Classes = () => {
   // State for classes data
   const [classes, setClasses] = useState([]);
@@ -175,7 +180,14 @@ const Classes = () => {
   }, [filters]);
   
   // Fetch classes
-  const fetchClasses = useCallback(async (showLoading = true) => {
+  const fetchClasses = useCallback(async (showLoading = true, forceRefresh = false) => {
+    if (!forceRefresh && globalClassesCache && (Date.now() - lastClassesFetchTime < CACHE_DURATION)) {
+      setClasses(globalClassesCache);
+      applyFilters(globalClassesCache);
+      setLoading(prev => ({ ...prev, initial: false, refresh: false }));
+      return;
+    }
+
     if (showLoading) {
       setLoading(prev => ({ ...prev, initial: true }));
     }
@@ -185,9 +197,11 @@ const Classes = () => {
       const data = await classAPI.getClasses();
       if (data.success) {
         const classesList = data.data.classes || [];
+        globalClassesCache = classesList;
+        lastClassesFetchTime = Date.now();
         setClasses(classesList);
         applyFilters(classesList);
-        if (showLoading) {
+        if (showLoading && classesList.length > 0) {
           addToast('Classes loaded successfully', 'success');
         }
       } else {
@@ -224,7 +238,7 @@ const Classes = () => {
   // Refresh data
   const handleRefresh = useCallback(() => {
     setLoading(prev => ({ ...prev, refresh: true }));
-    fetchClasses(false);
+    fetchClasses(false, true);
   }, [fetchClasses]);
   
   // Open class modal
@@ -243,13 +257,15 @@ const Classes = () => {
   
   // Handle class update
   const handleClassUpdate = useCallback((updatedClass) => {
-    setClasses(prev => 
-      prev.map(cls => 
+    setClasses(prev => {
+      const newClasses = prev.map(cls => 
         cls.class_id === updatedClass.class_id 
           ? { ...cls, ...updatedClass, class_name: updatedClass.class_name }
           : cls
-      )
-    );
+      );
+      globalClassesCache = newClasses;
+      return newClasses;
+    });
     applyFilters(classes.map(cls => 
       cls.class_id === updatedClass.class_id 
         ? { ...cls, ...updatedClass, class_name: updatedClass.class_name }
@@ -260,7 +276,11 @@ const Classes = () => {
   
   // Handle class delete
   const handleClassDelete = useCallback((classId) => {
-    setClasses(prev => prev.filter(cls => cls.class_id !== classId));
+    setClasses(prev => {
+      const newClasses = prev.filter(cls => cls.class_id !== classId);
+      globalClassesCache = newClasses;
+      return newClasses;
+    });
     applyFilters(classes.filter(cls => cls.class_id !== classId));
     addToast('Class deleted successfully', 'success');
   }, [classes, applyFilters, addToast]);

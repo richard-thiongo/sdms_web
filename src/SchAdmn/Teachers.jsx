@@ -10,6 +10,11 @@ import TeacherModal from './TeacherModal';
 import { teacherAPI, formatDate } from './utils/teacherUtils';
 import { sanitizeErrorMessage } from '../utils/errorUtils';
 
+// Module-level cache to prevent reloading when switching tabs
+let globalTeachersCache = null;
+let lastTeachersFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const Teachers = () => {
   // State for teachers data
   const [teachers, setTeachers] = useState([]);
@@ -172,7 +177,14 @@ const Teachers = () => {
   }, [filters]);
   
   // Fetch teachers
-  const fetchTeachers = useCallback(async (showLoading = true) => {
+  const fetchTeachers = useCallback(async (showLoading = true, forceRefresh = false) => {
+    if (!forceRefresh && globalTeachersCache && (Date.now() - lastTeachersFetchTime < CACHE_DURATION)) {
+      setTeachers(globalTeachersCache);
+      applyFilters(globalTeachersCache);
+      setLoading(prev => ({ ...prev, initial: false, refresh: false }));
+      return;
+    }
+
     if (showLoading) {
       setLoading(prev => ({ ...prev, initial: true }));
     }
@@ -181,9 +193,12 @@ const Teachers = () => {
     try {
       const data = await teacherAPI.getTeachers();
       if (data.success) {
-        setTeachers(data.data || []);
-        applyFilters(data.data || []);
-        if (showLoading) {
+        const teachersList = data.data || [];
+        globalTeachersCache = teachersList;
+        lastTeachersFetchTime = Date.now();
+        setTeachers(teachersList);
+        applyFilters(teachersList);
+        if (showLoading && teachersList.length > 0) {
           addToast('Teachers loaded successfully', 'success');
         }
       } else {
@@ -220,7 +235,7 @@ const Teachers = () => {
   // Refresh data
   const handleRefresh = useCallback(() => {
     setLoading(prev => ({ ...prev, refresh: true }));
-    fetchTeachers(false);
+    fetchTeachers(false, true);
   }, [fetchTeachers]);
   
   // Open teacher modal
@@ -239,13 +254,15 @@ const Teachers = () => {
   
   // Handle teacher update
   const handleTeacherUpdate = useCallback((updatedTeacher) => {
-    setTeachers(prev => 
-      prev.map(teacher => 
+    setTeachers(prev => {
+      const newTeachers = prev.map(teacher => 
         teacher.user_id === updatedTeacher.user_id 
           ? { ...teacher, ...updatedTeacher }
           : teacher
-      )
-    );
+      );
+      globalTeachersCache = newTeachers;
+      return newTeachers;
+    });
     applyFilters(teachers.map(teacher => 
       teacher.user_id === updatedTeacher.user_id 
         ? { ...teacher, ...updatedTeacher }
@@ -256,7 +273,11 @@ const Teachers = () => {
   
   // Handle teacher delete
   const handleTeacherDelete = useCallback((teacherId) => {
-    setTeachers(prev => prev.filter(teacher => teacher.user_id !== teacherId));
+    setTeachers(prev => {
+      const newTeachers = prev.filter(teacher => teacher.user_id !== teacherId);
+      globalTeachersCache = newTeachers;
+      return newTeachers;
+    });
     applyFilters(teachers.filter(teacher => teacher.user_id !== teacherId));
     addToast('Teacher deleted successfully', 'success');
   }, [teachers, applyFilters, addToast]);

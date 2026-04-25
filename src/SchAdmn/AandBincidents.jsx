@@ -15,6 +15,12 @@ import {
 } from './utils/incidentUtils';
 import { sanitizeErrorMessage } from '../utils/errorUtils';
 
+// Module-level cache to prevent reloading when switching tabs
+let globalAandBCache = null;
+let globalAandBSeverityFilter = 'all';
+let lastAandBFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const AandBincidents = () => {
   const [incidents, setIncidents] = useState([]);
   const [filteredIncidents, setFilteredIncidents] = useState([]);
@@ -90,14 +96,24 @@ const AandBincidents = () => {
 
   useEffect(() => { setFilteredIncidents(computedFilteredIncidents); }, [computedFilteredIncidents]);
 
-  const fetchIncidents = useCallback(async (showLoading = true) => {
+  const fetchIncidents = useCallback(async (showLoading = true, forceRefresh = false) => {
+    if (!forceRefresh && filters.severityFilter === globalAandBSeverityFilter && globalAandBCache && (Date.now() - lastAandBFetchTime < CACHE_DURATION)) {
+      setIncidents(globalAandBCache);
+      setLoading(prev => ({ ...prev, initial: false, refresh: false }));
+      return;
+    }
+
     if (showLoading) setLoading(prev => ({ ...prev, initial: true }));
     setError(null);
     try {
       const data = await incidentAPI.getIncidents({ severity: filters.severityFilter !== 'all' ? filters.severityFilter : undefined });
       if (data.success) {
-        setIncidents(data.data.incidents || []);
-        if (showLoading) addToast('A/B incidents loaded successfully', 'success');
+        const incidentsList = data.data.incidents || [];
+        globalAandBCache = incidentsList;
+        globalAandBSeverityFilter = filters.severityFilter;
+        lastAandBFetchTime = Date.now();
+        setIncidents(incidentsList);
+        if (showLoading && incidentsList.length > 0) addToast('A/B incidents loaded successfully', 'success');
       } else {
         setError(sanitizeErrorMessage(data.message, 'Failed to load incidents'));
         addToast(sanitizeErrorMessage(data.message, 'Failed to load incidents'), 'error');
@@ -112,7 +128,7 @@ const AandBincidents = () => {
 
   const handleFilterChange = useCallback((key, value) => { setFilters(prev => ({ ...prev, [key]: value })); }, []);
   const handleSearch = useCallback((value) => { handleFilterChange('search', value); }, [handleFilterChange]);
-  const handleRefresh = useCallback(() => { setLoading(prev => ({ ...prev, refresh: true })); fetchIncidents(false); }, [fetchIncidents]);
+  const handleRefresh = useCallback(() => { setLoading(prev => ({ ...prev, refresh: true })); fetchIncidents(false, true); }, [fetchIncidents]);
   const openIncidentModal = useCallback((incident, view = 'details') => { setSelectedIncident(incident); setModalView(view); setIsModalOpen(true); }, []);
   const closeIncidentModal = useCallback(() => { setIsModalOpen(false); setSelectedIncident(null); setModalView('details'); }, []);
 
@@ -121,7 +137,11 @@ const AandBincidents = () => {
     try {
       const result = await incidentAPI.updateIncidentStatus(incidentId, status);
       if (result.success) {
-        setIncidents(prev => prev.map(i => i.incident_id === incidentId ? { ...i, status, updated_at: new Date().toISOString() } : i));
+        setIncidents(prev => {
+          const newIncidents = prev.map(i => i.incident_id === incidentId ? { ...i, status, updated_at: new Date().toISOString() } : i);
+          globalAandBCache = newIncidents;
+          return newIncidents;
+        });
         addToast(`Incident ${status === 'approved' ? 'approved' : 'rejected'} successfully`, 'success');
         closeIncidentModal();
       } else {

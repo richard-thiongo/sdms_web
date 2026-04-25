@@ -17,12 +17,6 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
     classLevelIncidents,
     schoolClassIncidents,
     loading,
-    fetchClassStudents,
-    fetchClassIncidents,
-    fetchMyIncidents,
-    fetchSchoolIncidents,
-    fetchClassLevelIncidents,
-    fetchSchoolClassIncidents,
     deleteIncident,
     deleteClassIncident,
     removeStudent,
@@ -35,7 +29,6 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
   const itemsPerPage = 20;
 
   useEffect(() => {
-    loadData();
     setViewFilter('class');
     setSearchQuery('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -45,29 +38,6 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
     filterData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, viewFilter, listType, students, classIncidents, myIncidents, schoolIncidents, classLevelIncidents, schoolClassIncidents]);
-
-  const loadData = async () => {
-    try {
-      switch (listType) {
-        case 'students':
-          await fetchClassStudents();
-          break;
-        case 'incidents':
-          await Promise.all([fetchClassIncidents(), fetchMyIncidents(), fetchSchoolIncidents()]);
-          break;
-        case 'classIncidentsList':
-          await Promise.all([fetchClassLevelIncidents(), fetchSchoolClassIncidents()]);
-          break;
-        case 'myIncidents':
-          await fetchMyIncidents();
-          break;
-        default:
-          break;
-      }
-    } catch (e) {
-      console.error('Load error:', e);
-    }
-  };
 
   const getCurrentData = () => {
     switch (listType) {
@@ -119,7 +89,6 @@ const TeacherLists = ({ listType, onOpenModal, onNavigateToDashboard }) => {
       if (type === 'incident') await deleteIncident(id);
       else if (type === 'classIncident') await deleteClassIncident(id);
       else if (type === 'student') await removeStudent(id);
-      await loadData();
     } catch (e) {
       console.error('Delete error:', e);
     }

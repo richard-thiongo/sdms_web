@@ -12,6 +12,13 @@ import SincidentModal from './SincidentModal';
 import sTierUtils from './utils/stierUtils';
 import { sanitizeErrorMessage } from '../utils/errorUtils';
 
+// Module-level cache to prevent reloading when switching tabs
+let globalSincidentsCache = null;
+let globalSincidentsPagination = null;
+let globalSincidentsStatusFilter = 'all';
+let lastSincidentsFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const Sincidents = () => {
   // State for incidents data
   const [incidents, setIncidents] = useState([]);
@@ -136,7 +143,14 @@ const Sincidents = () => {
   }, [computedFilteredIncidents]);
   
   // Fetch incidents
-  const fetchIncidents = useCallback(async (page = 1, showLoading = true) => {
+  const fetchIncidents = useCallback(async (page = 1, showLoading = true, forceRefresh = false) => {
+    if (!forceRefresh && page === 1 && filters.statusFilter === globalSincidentsStatusFilter && globalSincidentsCache && (Date.now() - lastSincidentsFetchTime < CACHE_DURATION)) {
+      setIncidents(globalSincidentsCache);
+      setPagination(globalSincidentsPagination);
+      setLoading(prev => ({ ...prev, initial: false, refresh: false }));
+      return;
+    }
+
     if (showLoading) {
       setLoading(prev => ({ ...prev, initial: true }));
     }
@@ -151,13 +165,22 @@ const Sincidents = () => {
       
       if (result.success) {
         const incidentsList = result.data?.incidents || [];
-        setIncidents(incidentsList);
-        setPagination(result.data?.pagination || {
+        const paginationData = result.data?.pagination || {
           page: 1,
           per_page: 20,
           total: 0,
           total_pages: 1,
-        });
+        };
+
+        if (page === 1) {
+          globalSincidentsCache = incidentsList;
+          globalSincidentsPagination = paginationData;
+          globalSincidentsStatusFilter = filters.statusFilter;
+          lastSincidentsFetchTime = Date.now();
+        }
+
+        setIncidents(incidentsList);
+        setPagination(paginationData);
         
         if (showLoading && incidentsList.length > 0) {
           addToast('S-tier incidents loaded successfully', 'success');
@@ -192,7 +215,7 @@ const Sincidents = () => {
   // Refresh data
   const handleRefresh = useCallback(() => {
     setLoading(prev => ({ ...prev, refresh: true }));
-    fetchIncidents(pagination.page, false);
+    fetchIncidents(pagination.page, false, true);
   }, [fetchIncidents, pagination.page]);
   
   // Open incident modal
