@@ -1,5 +1,5 @@
 // Student/StudentContext.jsx
-import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
+import React, { createContext, useState, useContext, useCallback, useEffect, useRef } from 'react';
 import { sanitizeErrorMessage } from '../utils/errorUtils';
 
 const StudentContext = createContext();
@@ -26,7 +26,6 @@ export const StudentProvider = ({ children }) => {
 
   // Data states
   const [dashboardData, setDashboardData] = useState(null);
-  const [incidentsCache, setIncidentsCache] = useState({});
   const [incidents, setIncidents] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -35,6 +34,10 @@ export const StudentProvider = ({ children }) => {
     totalPages: 1
   });
   const [selectedIncident, setSelectedIncident] = useState(null);
+  
+  // Refs for internal cache tracking to keep fetch functions stable
+  const dashboardDataRef = useRef(null);
+  const incidentsCacheRef = useRef({});
 
   const getToken = useCallback(() => localStorage.getItem('access_token'), []);
   const getRefreshToken = useCallback(() => localStorage.getItem('refresh_token'), []);
@@ -149,13 +152,15 @@ export const StudentProvider = ({ children }) => {
 
   // API Methods
   const fetchDashboard = useCallback(async (forceRefresh = false) => {
-    if (dashboardData && !forceRefresh) {
-      return dashboardData;
+    if (dashboardDataRef.current && !forceRefresh) {
+      return dashboardDataRef.current;
     }
+    
     setLoading(prev => ({ ...prev, dashboard: true }));
     try {
       const result = await fetchWithAuth(`${API_URL}/student/dashboard`);
       if (result.success) {
+        dashboardDataRef.current = result.data;
         setDashboardData(result.data);
         localStorage.setItem('full_name', result.data.student_info.full_name);
         localStorage.setItem('class_name', result.data.student_info.class?.class_name || 'Not Assigned');
@@ -168,15 +173,15 @@ export const StudentProvider = ({ children }) => {
     } finally {
       setLoading(prev => ({ ...prev, dashboard: false }));
     }
-  }, [fetchWithAuth, dashboardData]);
+  }, [fetchWithAuth]);
 
   const fetchIncidents = useCallback(async (type = 'personal', filters = {}, forceRefresh = false) => {
     const cacheKey = `${type}_${filters.page || 1}_${filters.perPage || 20}_${filters.severity || ''}_${filters.search || ''}`;
     
-    if (!forceRefresh && incidentsCache[cacheKey]) {
-      setIncidents(incidentsCache[cacheKey].incidents);
-      setPagination(incidentsCache[cacheKey].pagination);
-      return incidentsCache[cacheKey].data;
+    if (!forceRefresh && incidentsCacheRef.current[cacheKey]) {
+      setIncidents(incidentsCacheRef.current[cacheKey].incidents);
+      setPagination(incidentsCacheRef.current[cacheKey].pagination);
+      return incidentsCacheRef.current[cacheKey].data;
     }
 
     setLoading(prev => ({ ...prev, incidents: true }));
@@ -200,14 +205,13 @@ export const StudentProvider = ({ children }) => {
           totalPages: 1
         };
         setPagination(newPagination);
-        setIncidentsCache(prev => ({
-          ...prev,
-          [cacheKey]: {
-            incidents: result.data.incidents || [],
-            pagination: newPagination,
-            data: result.data
-          }
-        }));
+        
+        incidentsCacheRef.current[cacheKey] = {
+          incidents: result.data.incidents || [],
+          pagination: newPagination,
+          data: result.data
+        };
+        
         return result.data;
       }
       throw new Error(result.message || 'Failed to load incidents');
@@ -217,7 +221,7 @@ export const StudentProvider = ({ children }) => {
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
     }
-  }, [fetchWithAuth, incidentsCache]);
+  }, [fetchWithAuth]);
 
   const fetchIncidentDetails = useCallback(async (incidentId, type = 'personal', forceRefresh = false) => {
     if (!forceRefresh && selectedIncident && selectedIncident.incident_id === parseInt(incidentId)) {
