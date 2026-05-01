@@ -38,6 +38,7 @@ export const StudentProvider = ({ children }) => {
   // Refs for internal cache tracking to keep fetch functions stable
   const dashboardDataRef = useRef(null);
   const incidentsCacheRef = useRef({});
+  const incidentDetailsCacheRef = useRef({});
 
   const getToken = useCallback(() => localStorage.getItem('access_token'), []);
   const getRefreshToken = useCallback(() => localStorage.getItem('refresh_token'), []);
@@ -63,6 +64,13 @@ export const StudentProvider = ({ children }) => {
     localStorage.removeItem('full_name');
     localStorage.removeItem('class_name');
     sessionStorage.clear();
+    // Clear in-memory caches for the next session
+    dashboardDataRef.current = null;
+    incidentsCacheRef.current = {};
+    incidentDetailsCacheRef.current = {};
+    setDashboardData(null);
+    setIncidents([]);
+    setSelectedIncident(null);
     window.location.href = '/students/login';
   }, []);
 
@@ -224,14 +232,26 @@ export const StudentProvider = ({ children }) => {
   }, [fetchWithAuth]);
 
   const fetchIncidentDetails = useCallback(async (incidentId, type = 'personal', forceRefresh = false) => {
-    if (!forceRefresh && selectedIncident && selectedIncident.incident_id === parseInt(incidentId)) {
-      return selectedIncident;
+    const id = parseInt(incidentId);
+    const cacheKey = `${type}_${id}`;
+
+    if (!forceRefresh) {
+      const cached = incidentDetailsCacheRef.current[cacheKey];
+      if (cached) {
+        // Ensure the UI can render immediately from cached details.
+        setSelectedIncident(cached);
+        return cached;
+      }
+      if (selectedIncident && selectedIncident.incident_id === id) {
+        return selectedIncident;
+      }
     }
     setLoading(prev => ({ ...prev, details: true }));
     try {
       const result = await fetchWithAuth(`${API_URL}/student/incidents/${incidentId}?type=${type}`);
       if (result.success) {
         setSelectedIncident(result.data);
+        incidentDetailsCacheRef.current[cacheKey] = result.data;
         return result.data;
       }
       throw new Error(result.message || 'Failed to load incident details');

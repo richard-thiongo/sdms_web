@@ -34,6 +34,9 @@ const IncidentDetails = () => {
   const [imageIndex, setImageIndex] = useState(0);
   
   useEffect(() => {
+    // Avoid showing stale data (previous incident) while loading the new one.
+    setSelectedImage(null);
+    setImageIndex(0);
     if (incidentId) {
       fetchIncidentDetails(incidentId, incidentType).catch(() => {});
     }
@@ -131,7 +134,14 @@ const IncidentDetails = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  if (contextLoading.details && !incident) {
+  const requestedId = Number(incidentId);
+  const hasValidRequestedId = Number.isFinite(requestedId);
+  const isCurrentIncident =
+    !!incident && hasValidRequestedId && Number(incident.incident_id) === requestedId;
+
+  // If we have an incident in context but it's for a different ID, treat it as "loading"
+  // to prevent a flicker of the previously viewed incident.
+  if (contextLoading.details || (hasValidRequestedId && !isCurrentIncident)) {
     return (
       <div className="student-loading-screen">
         <div className="student-loader-content">
